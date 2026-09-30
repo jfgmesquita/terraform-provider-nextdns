@@ -1,1 +1,1 @@
-terraform import nextdns_example.test "id-123"
+terraform import nextdns_example.example "id-123"
