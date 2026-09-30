@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/jfgmesquita/terraform-provider-nextdns
 
 go 1.25.8
 
