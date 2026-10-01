@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,9 +28,24 @@ func NewClient(apiKey string) *Client {
 	return &Client{
 		BaseURL: DefaultBaseURL,
 		apiKey:  apiKey,
-		// NextDNS can take close to a minute to answer some requests.
-		httpClient: &http.Client{Timeout: 2 * time.Minute},
+		httpClient: &http.Client{
+			// NextDNS can take close to a minute to answer some requests.
+			Timeout:       2 * time.Minute,
+			CheckRedirect: checkRedirect,
+		},
 	}
+}
+
+// checkRedirect only follows redirects to the same host. Go sends X-Api-Key
+// again when it follows a redirect, so this keeps the key from leaking.
+func checkRedirect(req *http.Request, via []*http.Request) error {
+	if req.URL.Scheme != via[0].URL.Scheme || req.URL.Host != via[0].URL.Host {
+		return fmt.Errorf("refusing redirect to %s: it would send the API key to another host", req.URL.Host)
+	}
+	if len(via) >= 10 {
+		return errors.New("stopped after 10 redirects")
+	}
+	return nil
 }
 
 // ErrorDetail is one entry of the "errors" list in a NextDNS response.

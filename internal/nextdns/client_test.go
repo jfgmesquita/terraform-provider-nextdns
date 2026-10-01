@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -129,5 +130,47 @@ func TestDoErrors(t *testing.T) {
 				t.Errorf("message = %q, want %q", err.Error(), tt.wantMsg)
 			}
 		})
+	}
+}
+
+func TestDoRefusesRedirectToAnotherHost(t *testing.T) {
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("other host received a request (X-Api-Key = %q)", r.Header.Get("X-Api-Key"))
+	}))
+	t.Cleanup(other.Close)
+
+	redirecting := httptest.NewServer(http.RedirectHandler(other.URL+"/profiles", http.StatusFound))
+	t.Cleanup(redirecting.Close)
+
+	client := NewClient("test-key")
+	client.BaseURL = redirecting.URL
+
+	err := client.Do(t.Context(), http.MethodGet, "/profiles", nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "refusing redirect") {
+		t.Fatalf("error = %v, want a refused redirect", err)
+	}
+}
+
+func TestDoFollowsRedirectOnSameHost(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/old" {
+			http.Redirect(w, r, "/new", http.StatusFound)
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":{"name":"Home"}}`)
+	}))
+	t.Cleanup(server.Close)
+
+	client := NewClient("test-key")
+	client.BaseURL = server.URL
+
+	var out struct {
+		Name string `json:"name"`
+	}
+	if err := client.Do(t.Context(), http.MethodGet, "/old", nil, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.Name != "Home" {
+		t.Errorf("name = %q, want %q", out.Name, "Home")
 	}
 }
