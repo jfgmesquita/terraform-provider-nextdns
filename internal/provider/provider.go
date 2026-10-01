@@ -5,13 +5,16 @@ package provider
 
 import (
 	"context"
-	"net/http"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/jfgmesquita/terraform-provider-nextdns/internal/nextdns"
 )
 
 // Ensure NextDNSProvider satisfies the provider interface.
@@ -27,7 +30,7 @@ type NextDNSProvider struct {
 
 // NextDNSProviderModel describes the provider data model.
 type NextDNSProviderModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
+	APIKey types.String `tfsdk:"api_key"`
 }
 
 func (p *NextDNSProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -37,10 +40,12 @@ func (p *NextDNSProvider) Metadata(ctx context.Context, req provider.MetadataReq
 
 func (p *NextDNSProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manage NextDNS profiles.",
 		Attributes: map[string]schema.Attribute{
-			"endpoint": schema.StringAttribute{
-				MarkdownDescription: "Example provider attribute",
+			"api_key": schema.StringAttribute{
+				MarkdownDescription: "NextDNS API key, from https://my.nextdns.io/account. Can also be set with the `NEXTDNS_API_KEY` environment variable.",
 				Optional:            true,
+				Sensitive:           true,
 			},
 		},
 	}
@@ -55,11 +60,32 @@ func (p *NextDNSProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
+	if data.APIKey.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_key"),
+			"Unknown NextDNS API key",
+			"The api_key value is not known yet. Set it to a static value or use the NEXTDNS_API_KEY environment variable.",
+		)
+		return
+	}
 
-	// Example client configuration for data sources and resources
-	client := http.DefaultClient
+	apiKey := os.Getenv("NEXTDNS_API_KEY")
+	if !data.APIKey.IsNull() {
+		apiKey = data.APIKey.ValueString()
+	}
+
+	if apiKey == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_key"),
+			"Missing NextDNS API key",
+			"Set the api_key provider attribute or the NEXTDNS_API_KEY environment variable. "+
+				"Create an API key at https://my.nextdns.io/account.",
+		)
+		return
+	}
+
+	// Resources and data sources receive this client in their own Configure.
+	client := nextdns.NewClient(apiKey)
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
