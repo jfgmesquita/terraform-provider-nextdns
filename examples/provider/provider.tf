@@ -1,3 +1,4 @@
 provider "nextdns" {
-  # example configuration here
+  # Optional if the NEXTDNS_API_KEY environment variable is set.
+  api_key = var.nextdns_api_key
 }
