@@ -7,21 +7,15 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
-	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Ensure NextDNSProvider satisfies various provider interfaces.
+// Ensure NextDNSProvider satisfies the provider interface.
 var _ provider.Provider = &NextDNSProvider{}
-var _ provider.ProviderWithFunctions = &NextDNSProvider{}
-var _ provider.ProviderWithEphemeralResources = &NextDNSProvider{}
-var _ provider.ProviderWithActions = &NextDNSProvider{}
 
 // NextDNSProvider defines the provider implementation.
 type NextDNSProvider struct {
@@ -71,33 +65,11 @@ func (p *NextDNSProvider) Configure(ctx context.Context, req provider.ConfigureR
 }
 
 func (p *NextDNSProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		NewExampleResource,
-	}
-}
-
-func (p *NextDNSProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
-	return []func() ephemeral.EphemeralResource{
-		NewExampleEphemeralResource,
-	}
+	return []func() resource.Resource{}
 }
 
 func (p *NextDNSProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		NewExampleDataSource,
-	}
-}
-
-func (p *NextDNSProvider) Functions(ctx context.Context) []func() function.Function {
-	return []func() function.Function{
-		NewExampleFunction,
-	}
-}
-
-func (p *NextDNSProvider) Actions(ctx context.Context) []func() action.Action {
-	return []func() action.Action{
-		NewExampleAction,
-	}
+	return []func() datasource.DataSource{}
 }
 
 func New(version string) func() provider.Provider {
