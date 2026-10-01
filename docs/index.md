@@ -14,7 +14,8 @@ This provider is not affiliated with or endorsed by NextDNS.
 
 ```terraform
 provider "nextdns" {
-  # example configuration here
+  # Optional if the NEXTDNS_API_KEY environment variable is set.
+  api_key = var.nextdns_api_key
 }
 ```
 
@@ -23,4 +24,4 @@ provider "nextdns" {
 
 ### Optional
 
-- `endpoint` (String) Example provider attribute
+- `api_key` (String, Sensitive) NextDNS API key, from https://my.nextdns.io/account. Can also be set with the `NEXTDNS_API_KEY` environment variable.
