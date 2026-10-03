@@ -7,33 +7,28 @@ import (
 
 // Security holds a profile's security settings.
 type Security struct {
-	ThreatIntelligenceFeeds  bool          `json:"threatIntelligenceFeeds"`
-	AIThreatDetection        bool          `json:"aiThreatDetection"`
-	GoogleSafeBrowsing       bool          `json:"googleSafeBrowsing"`
-	Cryptojacking            bool          `json:"cryptojacking"`
-	DNSRebinding             bool          `json:"dnsRebinding"`
-	IDNHomographs            bool          `json:"idnHomographs"`
-	Typosquatting            bool          `json:"typosquatting"`
-	DGA                      bool          `json:"dga"`
-	NRD                      bool          `json:"nrd"`
-	NewlyActiveDomains       bool          `json:"newlyActiveDomains"`
-	FreeHostingDomains       bool          `json:"freeHostingDomains"`
-	DDNS                     bool          `json:"ddns"`
-	TunnelingEndpoints       bool          `json:"tunnelingEndpoints"`
-	DataDropServices         bool          `json:"dataDropServices"`
-	ResidentialHosting       bool          `json:"residentialHosting"`
-	UntrustedCertificates    bool          `json:"untrustedCertificates"`
-	DNSPayloadDelivery       bool          `json:"dnsPayloadDelivery"`
-	DecentralizedWebGateways bool          `json:"decentralizedWebGateways"`
-	HighRiskTLDs             bool          `json:"highRiskTlds"`
-	Parking                  bool          `json:"parking"`
-	CSAM                     bool          `json:"csam"`
-	TLDs                     []SecurityTLD `json:"tlds"`
-}
-
-// SecurityTLD is a top-level domain blocked by the profile.
-type SecurityTLD struct {
-	ID string `json:"id"`
+	ThreatIntelligenceFeeds  bool       `json:"threatIntelligenceFeeds"`
+	AIThreatDetection        bool       `json:"aiThreatDetection"`
+	GoogleSafeBrowsing       bool       `json:"googleSafeBrowsing"`
+	Cryptojacking            bool       `json:"cryptojacking"`
+	DNSRebinding             bool       `json:"dnsRebinding"`
+	IDNHomographs            bool       `json:"idnHomographs"`
+	Typosquatting            bool       `json:"typosquatting"`
+	DGA                      bool       `json:"dga"`
+	NRD                      bool       `json:"nrd"`
+	NewlyActiveDomains       bool       `json:"newlyActiveDomains"`
+	FreeHostingDomains       bool       `json:"freeHostingDomains"`
+	DDNS                     bool       `json:"ddns"`
+	TunnelingEndpoints       bool       `json:"tunnelingEndpoints"`
+	DataDropServices         bool       `json:"dataDropServices"`
+	ResidentialHosting       bool       `json:"residentialHosting"`
+	UntrustedCertificates    bool       `json:"untrustedCertificates"`
+	DNSPayloadDelivery       bool       `json:"dnsPayloadDelivery"`
+	DecentralizedWebGateways bool       `json:"decentralizedWebGateways"`
+	HighRiskTLDs             bool       `json:"highRiskTlds"`
+	Parking                  bool       `json:"parking"`
+	CSAM                     bool       `json:"csam"`
+	TLDs                     []ListItem `json:"tlds"`
 }
 
 // GetSecurity returns the security settings of a profile.
