@@ -96,15 +96,20 @@ func (r *ProfileResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	data.ID = types.StringValue(created.ID)
+
 	// The create response repeats the ID in "fingerprint", so read the
 	// profile back to get the real fingerprint.
 	profile, err := r.client.GetProfile(ctx, created.ID)
 	if err != nil {
+		// The profile exists now: save its ID so Terraform keeps track of it
+		// (marked as tainted) instead of creating a duplicate on the next apply.
+		data.Fingerprint = types.StringNull()
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 		resp.Diagnostics.AddError("Error reading NextDNS profile after creating it", err.Error())
 		return
 	}
 
-	data.ID = types.StringValue(profile.ID)
 	data.Fingerprint = types.StringValue(profile.Fingerprint)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
