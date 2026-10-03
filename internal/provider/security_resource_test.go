@@ -67,6 +67,16 @@ func TestAccSecurityResource(t *testing.T) {
 					statecheck.ExpectKnownValue("nextdns_security.test", tfjsonpath.New("dga"), knownvalue.Bool(true)),
 				},
 			},
+			// Removing the tlds line clears the list.
+			{
+				Config: testAccSecurityResourceConfig(name, `
+  cryptojacking = true
+  dga           = true
+`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("nextdns_security.test", tfjsonpath.New("tlds"), knownvalue.SetSizeExact(0)),
+				},
+			},
 			// Removing the resource must not change NextDNS (issue #6).
 			{
 				Config: testAccProfileResourceConfig(name),
@@ -76,7 +86,7 @@ func TestAccSecurityResource(t *testing.T) {
 					if err != nil {
 						return err
 					}
-					if !security.Cryptojacking || !security.DGA || len(security.TLDs) != 1 {
+					if !security.Cryptojacking || !security.DGA || len(security.TLDs) != 0 {
 						return errors.New("security settings changed after removing nextdns_security from the configuration")
 					}
 					return nil
