@@ -80,5 +80,8 @@ jobs:
       - run: go mod download
       - env:
           TF_ACC: "1"
-        run: go test -v -cover ./internal/provider/
+          # Acceptance tests are skipped when this secret is not available,
+          # for example in pull requests from forks.
+          NEXTDNS_API_KEY: ${{ secrets.NEXTDNS_API_KEY }}
+        run: go test -v -cover ./...
         timeout-minutes: 10
