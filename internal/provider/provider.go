@@ -94,6 +94,7 @@ func (p *NextDNSProvider) Resources(ctx context.Context) []func() resource.Resou
 	return []func() resource.Resource{
 		NewProfileResource,
 		NewSecurityResource,
+		NewPrivacyResource,
 	}
 }
 

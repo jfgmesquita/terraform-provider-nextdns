@@ -85,6 +85,11 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("NextDNS API error (HTTP %d): %s", e.StatusCode, strings.Join(messages, "; "))
 }
 
+// ListItem is one entry of a list of IDs, such as blocked TLDs or blocklists.
+type ListItem struct {
+	ID string `json:"id"`
+}
+
 // response is the envelope NextDNS wraps every answer in.
 type response struct {
 	Data   json.RawMessage `json:"data"`

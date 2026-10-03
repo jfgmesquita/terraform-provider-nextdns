@@ -26,7 +26,7 @@ func TestUpdateSecuritySendsEmptyTLDList(t *testing.T) {
 		}
 	})
 
-	security := &Security{Cryptojacking: true, TLDs: []SecurityTLD{}}
+	security := &Security{Cryptojacking: true, TLDs: []ListItem{}}
 	if err := client.UpdateSecurity(t.Context(), "abc123", security); err != nil {
 		t.Fatal(err)
 	}

@@ -3,9 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"sort"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -133,7 +132,7 @@ func (r *SecurityResource) Schema(ctx context.Context, req resource.SchemaReques
 			ElementType:         types.StringType,
 			Optional:            true,
 			Computed:            true,
-			Default:             setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
+			Default:             setdefault.StaticValue(emptyStringSet()),
 		},
 	}
 	for name, description := range securityToggles {
@@ -180,7 +179,7 @@ func (r *SecurityResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	r.update(ctx, &data, resp.Diagnostics.AddError)
+	resp.Diagnostics.Append(r.update(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -210,13 +209,9 @@ func (r *SecurityResource) Read(ctx context.Context, req resource.ReadRequest, r
 		*p.tf = types.BoolValue(*p.api)
 	}
 
-	tlds := make([]string, 0, len(security.TLDs))
-	for _, tld := range security.TLDs {
-		tlds = append(tlds, tld.ID)
-	}
-	tldSet, diags := types.SetValueFrom(ctx, types.StringType, tlds)
+	tlds, diags := listItemsToSet(ctx, security.TLDs)
 	resp.Diagnostics.Append(diags...)
-	data.TLDs = tldSet
+	data.TLDs = tlds
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -228,7 +223,7 @@ func (r *SecurityResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	r.update(ctx, &data, resp.Diagnostics.AddError)
+	resp.Diagnostics.Append(r.update(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -237,27 +232,22 @@ func (r *SecurityResource) Update(ctx context.Context, req resource.UpdateReques
 }
 
 // update sends every setting in data to NextDNS.
-func (r *SecurityResource) update(ctx context.Context, data *SecurityResourceModel, addError func(string, string)) {
+func (r *SecurityResource) update(ctx context.Context, data *SecurityResourceModel) diag.Diagnostics {
 	security := &nextdns.Security{}
 	for _, p := range securityTogglePairs(data, security) {
 		*p.api = p.tf.ValueBool()
 	}
 
-	var tlds []string
-	if diags := data.TLDs.ElementsAs(ctx, &tlds, false); diags.HasError() {
-		addError("Error reading tlds", fmt.Sprint(diags))
-		return
+	tlds, diags := setToListItems(ctx, data.TLDs)
+	if diags.HasError() {
+		return diags
 	}
-	// Sorted, so requests are the same on every run.
-	sort.Strings(tlds)
-	security.TLDs = make([]nextdns.SecurityTLD, 0, len(tlds))
-	for _, tld := range tlds {
-		security.TLDs = append(security.TLDs, nextdns.SecurityTLD{ID: tld})
-	}
+	security.TLDs = tlds
 
 	if err := r.client.UpdateSecurity(ctx, data.ProfileID.ValueString(), security); err != nil {
-		addError("Error updating NextDNS security settings", err.Error())
+		diags.AddError("Error updating NextDNS security settings", err.Error())
 	}
+	return diags
 }
 
 func (r *SecurityResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
