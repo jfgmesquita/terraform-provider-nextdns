@@ -95,6 +95,7 @@ func (p *NextDNSProvider) Resources(ctx context.Context) []func() resource.Resou
 		NewProfileResource,
 		NewSecurityResource,
 		NewPrivacyResource,
+		NewSettingsResource,
 	}
 }
 

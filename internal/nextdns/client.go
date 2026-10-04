@@ -54,6 +54,7 @@ type ErrorDetail struct {
 	Detail string `json:"detail"`
 	Source struct {
 		Parameter string `json:"parameter"`
+		Pointer   string `json:"pointer"`
 	} `json:"source"`
 }
 
@@ -78,6 +79,9 @@ func (e *APIError) Error() string {
 		}
 		if d.Source.Parameter != "" {
 			msg += " (parameter: " + d.Source.Parameter + ")"
+		}
+		if d.Source.Pointer != "" {
+			msg += " (at " + d.Source.Pointer + ")"
 		}
 		messages = append(messages, msg)
 	}
