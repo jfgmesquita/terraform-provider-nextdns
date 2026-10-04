@@ -66,7 +66,8 @@ func (r *DomainListResource) Schema(ctx context.Context, req resource.SchemaRequ
 		MarkdownDescription: fmt.Sprintf("The %s of a NextDNS profile. %s\n\n", r.list, r.description) +
 			fmt.Sprintf("This resource manages the whole %s: domains added outside Terraform are removed on the next apply.\n\n", r.list) +
 			"Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: " +
-			"Terraform only stops managing it. To remove domains, delete their blocks and apply.",
+			"Terraform only stops managing it. To remove domains, delete their blocks and apply.\n\n" +
+			profilePartNotes("nextdns_"+r.list),
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{

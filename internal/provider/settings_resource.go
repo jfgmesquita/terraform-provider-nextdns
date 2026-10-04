@@ -94,7 +94,8 @@ func (r *SettingsResource) Schema(ctx context.Context, req resource.SchemaReques
 			"bypass age verification and Web3. The profile name is set in `nextdns_profile`.\n\n" +
 			"This resource manages all these settings: any setting left out of the configuration is set to its default.\n\n" +
 			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them.",
+			"Terraform only stops managing them.\n\n" +
+			profilePartNotes("nextdns_settings"),
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{

@@ -49,7 +49,8 @@ func (r *PrivacyResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"This resource manages all privacy settings: any setting left out of the configuration is turned off, " +
 			"and any list left out is emptied.\n\n" +
 			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them, and apply.",
+			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them, and apply.\n\n" +
+			profilePartNotes("nextdns_privacy"),
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{
