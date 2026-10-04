@@ -99,6 +99,7 @@ func (p *NextDNSProvider) Resources(ctx context.Context) []func() resource.Resou
 		NewDenylistResource,
 		NewAllowlistResource,
 		NewRewritesResource,
+		NewParentalControlResource,
 	}
 }
 

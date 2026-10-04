@@ -7,9 +7,10 @@ reviews:
     - path: "internal/provider/**"
       instructions: |
         Design decisions that are intentional and documented, so don't flag them:
-        - The security, privacy, settings, denylist, allowlist and rewrites
-          resources manage the whole section of the profile: anything left out
-          of the configuration is reset to its default or removed.
+        - The security, privacy, settings, parental control, denylist,
+          allowlist and rewrites resources manage the whole section of the
+          profile: anything left out of the configuration is reset to its
+          default or removed.
         - Their Delete does not change NextDNS; it only removes the resource
           from the Terraform state. nextdns_profile's Delete does delete the
           profile.
