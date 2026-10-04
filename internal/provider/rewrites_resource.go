@@ -172,9 +172,12 @@ func (r *RewritesResource) Update(ctx context.Context, req resource.UpdateReques
 }
 
 // sync makes the rewrites in NextDNS match data. The API cannot replace the
-// whole list, so it compares with what NextDNS has now and deletes and adds
+// whole list, so it compares with what NextDNS has now and adds and deletes
 // rewrites one by one. Comparing with NextDNS, not with the Terraform state,
 // means a later apply finishes any work an interrupted one left undone.
+//
+// New rewrites are added before old ones are deleted: if a request fails
+// halfway, a domain keeps its old answer instead of losing its rewrite.
 func (r *RewritesResource) sync(ctx context.Context, data *RewritesResourceModel) error {
 	profileID := data.ProfileID.ValueString()
 
@@ -189,14 +192,14 @@ func (r *RewritesResource) sync(ctx context.Context, data *RewritesResourceModel
 	}
 
 	toDelete, toCreate := diffRewrites(current, desired)
-	for _, id := range toDelete {
-		if err := r.client.DeleteRewrite(ctx, profileID, id); err != nil && !nextdns.IsNotFound(err) {
-			return err
-		}
-	}
 	for _, key := range toCreate {
 		if err := r.client.CreateRewrite(ctx, profileID, key.domain, key.answer); err != nil {
 			return fmt.Errorf("adding %s → %s: %w", key.domain, key.answer, err)
+		}
+	}
+	for _, id := range toDelete {
+		if err := r.client.DeleteRewrite(ctx, profileID, id); err != nil && !nextdns.IsNotFound(err) {
+			return err
 		}
 	}
 	return nil
