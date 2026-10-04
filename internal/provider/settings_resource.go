@@ -37,8 +37,8 @@ type SettingsResource struct {
 type SettingsResourceModel struct {
 	ProfileID             types.String `tfsdk:"profile_id"`
 	LogsEnabled           types.Bool   `tfsdk:"logs_enabled"`
-	LogsDropIP            types.Bool   `tfsdk:"logs_drop_ip"`
-	LogsDropDomain        types.Bool   `tfsdk:"logs_drop_domain"`
+	LogsClientIPs         types.Bool   `tfsdk:"logs_client_ips"`
+	LogsDomains           types.Bool   `tfsdk:"logs_domains"`
 	LogsRetention         types.String `tfsdk:"logs_retention"`
 	LogsLocation          types.String `tfsdk:"logs_location"`
 	BlockPage             types.Bool   `tfsdk:"block_page"`
@@ -67,7 +67,7 @@ var logRetentions = []struct {
 }
 
 // logLocations lists the accepted log storage locations.
-var logLocations = []string{"us", "eu", "gb", "ch"}
+var logLocations = []string{"us", "eu", "ch"}
 
 func (r *SettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_settings"
@@ -104,9 +104,19 @@ func (r *SettingsResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"logs_enabled":     boolSetting("Log the DNS queries of this profile."),
-			"logs_drop_ip":     boolSetting("Privacy adjustment: do not log the IP addresses of clients."),
-			"logs_drop_domain": boolSetting("Privacy adjustment: do not log the queried domains."),
+			"logs_enabled": boolSetting("Log the DNS queries of this profile."),
+			"logs_client_ips": schema.BoolAttribute{
+				MarkdownDescription: "Privacy adjustment: log client IP addresses. Defaults to `true`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+			},
+			"logs_domains": schema.BoolAttribute{
+				MarkdownDescription: "Privacy adjustment: log domains. Defaults to `true`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+			},
 			"logs_retention": schema.StringAttribute{
 				MarkdownDescription: "How long logs are kept: one of `" + strings.Join(retentionNames, "`, `") + "`. Defaults to `3 months`.",
 				Optional:            true,
@@ -115,8 +125,8 @@ func (r *SettingsResource) Schema(ctx context.Context, req resource.SchemaReques
 				Validators:          []validator.String{stringvalidator.OneOf(retentionNames...)},
 			},
 			"logs_location": schema.StringAttribute{
-				MarkdownDescription: "Where logs are stored: `us` (United States), `eu` (European Union), " +
-					"`gb` (United Kingdom) or `ch` (Switzerland). Defaults to `us`.",
+				MarkdownDescription: "Where logs are stored: `us` (United States), `eu` (European Union) " +
+					"or `ch` (Switzerland). Defaults to `us`.",
 				Optional:   true,
 				Computed:   true,
 				Default:    stringdefault.StaticString("us"),
@@ -209,8 +219,9 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	data.LogsEnabled = types.BoolValue(settings.Logs.Enabled)
-	data.LogsDropIP = types.BoolValue(settings.Logs.Drop.IP)
-	data.LogsDropDomain = types.BoolValue(settings.Logs.Drop.Domain)
+	// The API stores what is dropped; the dashboard and this resource show what is logged.
+	data.LogsClientIPs = types.BoolValue(!settings.Logs.Drop.IP)
+	data.LogsDomains = types.BoolValue(!settings.Logs.Drop.Domain)
 	data.LogsRetention = types.StringValue(retention)
 	data.LogsLocation = types.StringValue(settings.Logs.Location)
 	data.BlockPage = types.BoolValue(settings.BlockPage.Enabled)
@@ -244,8 +255,8 @@ func (r *SettingsResource) update(ctx context.Context, data *SettingsResourceMod
 
 	settings := &nextdns.Settings{}
 	settings.Logs.Enabled = data.LogsEnabled.ValueBool()
-	settings.Logs.Drop.IP = data.LogsDropIP.ValueBool()
-	settings.Logs.Drop.Domain = data.LogsDropDomain.ValueBool()
+	settings.Logs.Drop.IP = !data.LogsClientIPs.ValueBool()
+	settings.Logs.Drop.Domain = !data.LogsDomains.ValueBool()
 	settings.Logs.Location = data.LogsLocation.ValueString()
 	for _, ret := range logRetentions {
 		if ret.name == data.LogsRetention.ValueString() {

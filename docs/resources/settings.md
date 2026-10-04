@@ -27,11 +27,11 @@ resource "nextdns_profile" "home" {
 resource "nextdns_settings" "home" {
   profile_id = nextdns_profile.home.id
 
-  logs_enabled     = true
-  logs_drop_ip     = false
-  logs_drop_domain = false
-  logs_retention   = "1 month"
-  logs_location    = "eu"
+  logs_enabled    = true
+  logs_client_ips = true
+  logs_domains    = true
+  logs_retention  = "1 month"
+  logs_location   = "eu"
 
   block_page = true
 
@@ -58,10 +58,10 @@ resource "nextdns_settings" "home" {
 - `bypass_age_verification` (Boolean) Automatically bypass age verification checks used by certain websites, such as adult content sites, to verify a visitor’s age before allowing access. By enabling this feature, you acknowledge that you are legally old enough to access the content. Defaults to `false`.
 - `cache_boost` (Boolean) Minimize DNS queries by enforcing a minimum TTL (Time to live). Defaults to `false`.
 - `cname_flattening` (Boolean) Prevent CNAME-chasing resolvers from making unnecessary queries and polluting the logs with intermediate domains. Defaults to `false`.
-- `logs_drop_domain` (Boolean) Privacy adjustment: do not log the queried domains. Defaults to `false`.
-- `logs_drop_ip` (Boolean) Privacy adjustment: do not log the IP addresses of clients. Defaults to `false`.
+- `logs_client_ips` (Boolean) Privacy adjustment: log client IP addresses. Defaults to `true`.
+- `logs_domains` (Boolean) Privacy adjustment: log domains. Defaults to `true`.
 - `logs_enabled` (Boolean) Log the DNS queries of this profile. Defaults to `false`.
-- `logs_location` (String) Where logs are stored: `us` (United States), `eu` (European Union), `gb` (United Kingdom) or `ch` (Switzerland). Defaults to `us`.
+- `logs_location` (String) Where logs are stored: `us` (United States), `eu` (European Union) or `ch` (Switzerland). Defaults to `us`.
 - `logs_retention` (String) How long logs are kept: one of `1 hour`, `6 hours`, `1 day`, `1 week`, `1 month`, `3 months`, `6 months`, `1 year`, `2 years`. Defaults to `3 months`.
 - `web3` (Boolean) Web3 refers to a decentralized and censorship-resistant online ecosystem comprised of innovative technologies such as blockchain-based domain registries (e.g., Ethereum Name Service) and distributed content storage and delivery networks (e.g., IPFS). When enabled, NextDNS will act as an unfiltered gateway to this new Web, letting you experience it firsthand without the need to install anything. As most browsers only support classic top-level domains at the moment, you should add a trailing slash ("/") when trying to access a Web3 domain directly (e.g., "vitalik.eth/" instead of "vitalik.eth"). Defaults to `false`.
 

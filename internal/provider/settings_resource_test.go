@@ -36,16 +36,18 @@ func TestAccSettingsResource(t *testing.T) {
 			// Set some settings.
 			{
 				Config: testAccSettingsResourceConfig(name, `
-  logs_enabled   = true
-  logs_drop_ip   = true
-  logs_retention = "1 week"
-  logs_location  = "eu"
-  web3           = true
+  logs_enabled    = true
+  logs_client_ips = false
+  logs_retention  = "1 week"
+  logs_location   = "eu"
+  web3            = true
 `),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_retention"), knownvalue.StringExact("1 week")),
 					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_location"), knownvalue.StringExact("eu")),
 					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("block_page"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_client_ips"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_domains"), knownvalue.Bool(true)),
 				},
 				Check: func(s *terraform.State) error {
 					profileID = s.RootModule().Resources["nextdns_profile.test"].Primary.ID
@@ -72,7 +74,7 @@ func TestAccSettingsResource(t *testing.T) {
 `),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_retention"), knownvalue.StringExact("3 months")),
-					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_drop_ip"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("logs_client_ips"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("web3"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("nextdns_settings.test", tfjsonpath.New("bypass_age_verification"), knownvalue.Bool(true)),
 				},
