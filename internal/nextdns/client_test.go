@@ -99,6 +99,13 @@ func TestDoErrors(t *testing.T) {
 			wantMsg: "NextDNS API error (HTTP 400): invalid: Invalid TLD (parameter: id)",
 		},
 		{
+			// Response recorded from the real API.
+			name:    "client error with pointer",
+			status:  http.StatusBadRequest,
+			body:    `{"errors":[{"code":"enum","source":{"pointer":"/logs/retention"},"detail":"` + "`/logs/retention`" + ` must be equal to one of the allowed values."}]}`,
+			wantMsg: "NextDNS API error (HTTP 400): enum: `/logs/retention` must be equal to one of the allowed values. (at /logs/retention)",
+		},
+		{
 			// NextDNS sometimes reports errors with HTTP 200.
 			name:    "errors with HTTP 200",
 			status:  http.StatusOK,
