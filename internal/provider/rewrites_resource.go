@@ -55,7 +55,10 @@ func (r *RewritesResource) Schema(ctx context.Context, req resource.SchemaReques
 			"Rewrites apply to subdomains as well, and local IP addresses are supported as answers.\n\n" +
 			"This resource manages all rewrites of the profile: rewrites added outside Terraform are removed on the next apply.\n\n" +
 			"Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: " +
-			"Terraform only stops managing the rewrites. To remove rewrites, delete their blocks and apply.",
+			"Terraform only stops managing the rewrites. To remove rewrites, delete their blocks and apply.\n\n" +
+			profilePartNotes("nextdns_rewrites") + "\n\n" +
+			"~> NextDNS can only add or delete one rewrite at a time. If an apply fails partway, some changes may " +
+			"already be made: run `terraform apply` again to finish them.",
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{

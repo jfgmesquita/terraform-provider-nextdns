@@ -148,7 +148,8 @@ func (r *SecurityResource) Schema(ctx context.Context, req resource.SchemaReques
 		MarkdownDescription: "The security settings of a NextDNS profile.\n\n" +
 			"This resource manages all security settings: any setting left out of the configuration is turned off.\n\n" +
 			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them. To turn protections off, set them to `false` and apply.",
+			"Terraform only stops managing them. To turn protections off, set them to `false` and apply.\n\n" +
+			profilePartNotes("nextdns_security"),
 		Attributes: attributes,
 	}
 }
