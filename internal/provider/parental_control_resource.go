@@ -316,9 +316,16 @@ func (r *ParentalControlResource) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// update sends every setting in data to NextDNS, in two requests: NextDNS
-// fails when the recreation schedule is sent together with the services and
-// categories.
+// update sends every setting in data to NextDNS. NextDNS fails when the
+// recreation schedule is sent together with the services and categories, so
+// the schedule has its own request. To fail closed, it uses three requests:
+//
+//  1. settings, services and categories, with no recreation allowed;
+//  2. the recreation schedule;
+//  3. services and categories again, with their recreation flags.
+//
+// If a request fails, NextDNS is left stricter than configured, never more
+// permissive: entries never get recreation time under an outdated schedule.
 func (r *ParentalControlResource) update(ctx context.Context, data *ParentalControlResourceModel) error {
 	profileID := data.ProfileID.ValueString()
 
@@ -329,7 +336,11 @@ func (r *ParentalControlResource) update(ctx context.Context, data *ParentalCont
 		Services:              entriesToAPI(data.Services),
 		Categories:            entriesToAPI(data.Categories),
 	}
-	if err := r.client.UpdateParentalControl(ctx, profileID, pc); err != nil {
+
+	strict := *pc
+	strict.Services = withoutRecreation(pc.Services)
+	strict.Categories = withoutRecreation(pc.Categories)
+	if err := r.client.UpdateParentalControl(ctx, profileID, &strict); err != nil {
 		return err
 	}
 
@@ -348,7 +359,21 @@ func (r *ParentalControlResource) update(ctx context.Context, data *ParentalCont
 	if err := r.client.UpdateRecreation(ctx, profileID, recreation); err != nil {
 		return fmt.Errorf("updating recreation time: %w", err)
 	}
+
+	if err := r.client.UpdateParentalControl(ctx, profileID, pc); err != nil {
+		return fmt.Errorf("allowing recreation time: %w", err)
+	}
 	return nil
+}
+
+// withoutRecreation returns a copy of entries with recreation time turned off.
+func withoutRecreation(entries []nextdns.ParentalControlEntry) []nextdns.ParentalControlEntry {
+	out := make([]nextdns.ParentalControlEntry, len(entries))
+	for i, e := range entries {
+		e.Recreation = false
+		out[i] = e
+	}
+	return out
 }
 
 func entriesToAPI(entries map[string]ParentalControlEntryModel) []nextdns.ParentalControlEntry {
