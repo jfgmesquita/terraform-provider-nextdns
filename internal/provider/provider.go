@@ -98,6 +98,7 @@ func (p *NextDNSProvider) Resources(ctx context.Context) []func() resource.Resou
 		NewSettingsResource,
 		NewDenylistResource,
 		NewAllowlistResource,
+		NewRewritesResource,
 	}
 }
 
