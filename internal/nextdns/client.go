@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,12 @@ type Client struct {
 	BaseURL    string
 	apiKey     string
 	httpClient *http.Client
+
+	// NextDNS fails with HTTP 500 when it receives several changes to the
+	// same profile at once, so changes to a profile are sent one at a time,
+	// using one lock per profile ID.
+	mu           sync.Mutex
+	profileLocks map[string]*sync.Mutex
 }
 
 // NewClient returns a client that authenticates with the given API key.
@@ -103,6 +110,14 @@ type response struct {
 // Do sends a request to path (for example "/profiles") and decodes the
 // response's "data" field into out. body and out may be nil.
 func (c *Client) Do(ctx context.Context, method, path string, body, out any) error {
+	if method != http.MethodGet {
+		if id := profileIDFromPath(path); id != "" {
+			lock := c.profileLock(id)
+			lock.Lock()
+			defer lock.Unlock()
+		}
+	}
+
 	var reqBody io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -155,4 +170,31 @@ func (c *Client) Do(ctx context.Context, method, path string, body, out any) err
 	}
 
 	return nil
+}
+
+// profileLock returns the lock for changes to the given profile.
+func (c *Client) profileLock(id string) *sync.Mutex {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.profileLocks == nil {
+		c.profileLocks = map[string]*sync.Mutex{}
+	}
+	lock, ok := c.profileLocks[id]
+	if !ok {
+		lock = &sync.Mutex{}
+		c.profileLocks[id] = lock
+	}
+	return lock
+}
+
+// profileIDFromPath returns the profile ID in a path like "/profiles/abc123/security",
+// or "" if the path is not about one profile.
+func profileIDFromPath(path string) string {
+	rest, ok := strings.CutPrefix(path, "/profiles/")
+	if !ok {
+		return ""
+	}
+	id, _, _ := strings.Cut(rest, "/")
+	return id
 }

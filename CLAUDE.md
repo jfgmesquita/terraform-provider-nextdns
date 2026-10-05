@@ -36,6 +36,7 @@ CI (`.github/workflows/test.yml`) runs build, lint, `make generate` with a diff 
 The official docs (https://nextdns.github.io/api/) are incomplete. Verified behaviour:
 
 - Errors can come with any status, including HTTP 200 with an `errors` list. Validation errors point to the field with `source.pointer`.
+- Several changes to the same profile at the same time make some fail with HTTP 500. The client sends changes to a profile one at a time (`profileLock` in `client.go`); Terraform applies resources in parallel.
 - `POST /profiles` returns the ID in `fingerprint`; `GET` returns the real fingerprint.
 - `PATCH` on a section only changes the fields sent. An invalid value rejects the whole request.
 - `PUT /security/tlds` empties the list on an invalid TLD; `PATCH /security` with `tlds` does not, so use it.

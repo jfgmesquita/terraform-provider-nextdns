@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // newTestClient returns a client that talks to a fake NextDNS server, which
@@ -179,5 +182,56 @@ func TestDoFollowsRedirectOnSameHost(t *testing.T) {
 	}
 	if out.Name != "Home" {
 		t.Errorf("name = %q, want %q", out.Name, "Home")
+	}
+}
+
+func TestDoSendsChangesToOneProfileOneAtATime(t *testing.T) {
+	var inFlight, maxInFlight atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := inFlight.Add(1)
+		defer inFlight.Add(-1)
+		for {
+			m := maxInFlight.Load()
+			if n <= m || maxInFlight.CompareAndSwap(m, n) {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(server.Close)
+
+	client := NewClient("test-key")
+	client.BaseURL = server.URL
+
+	var wg sync.WaitGroup
+	for _, section := range []string{"security", "privacy", "settings", "denylist", "allowlist"} {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := client.Do(t.Context(), http.MethodPatch, "/profiles/abc123/"+section, map[string]bool{}, nil); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if got := maxInFlight.Load(); got != 1 {
+		t.Errorf("NextDNS received %d changes to the same profile at once, want 1", got)
+	}
+}
+
+func TestProfileIDFromPath(t *testing.T) {
+	tests := map[string]string{
+		"/profiles":                          "",
+		"/profiles/abc123":                   "abc123",
+		"/profiles/abc123/security":          "abc123",
+		"/profiles/abc123/rewrites/r910xzju": "abc123",
+		"/privacy/blocklists":                "",
+	}
+	for path, want := range tests {
+		if got := profileIDFromPath(path); got != want {
+			t.Errorf("profileIDFromPath(%q) = %q, want %q", path, got, want)
+		}
 	}
 }
