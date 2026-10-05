@@ -238,8 +238,12 @@ func TestProfileIDFromPath(t *testing.T) {
 }
 
 func TestDoStopsWaitingWhenCancelled(t *testing.T) {
+	// The server reports each request it receives, then holds it until the
+	// test ends.
+	reached := make(chan string, 2)
 	release := make(chan struct{})
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached <- r.URL.Path
 		<-release
 		w.WriteHeader(http.StatusNoContent)
 	}))
@@ -249,14 +253,14 @@ func TestDoStopsWaitingWhenCancelled(t *testing.T) {
 	client := NewClient("test-key")
 	client.BaseURL = server.URL
 
-	// A slow change holds the profile's lock.
+	// A first change reaches the server and holds the profile's lock.
 	go func() {
 		_ = client.Do(context.Background(), http.MethodPatch, "/profiles/abc123/security", map[string]bool{}, nil)
 	}()
-	time.Sleep(20 * time.Millisecond)
+	<-reached
 
-	// A second change to the same profile waits, and must return as soon as
-	// its context is cancelled.
+	// A second change to the same profile waits for the lock, and must return
+	// as soon as its context is cancelled, without reaching the server.
 	ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
 	defer cancel()
 	start := time.Now()
@@ -267,5 +271,10 @@ func TestDoStopsWaitingWhenCancelled(t *testing.T) {
 	}
 	if elapsed := time.Since(start); elapsed > time.Second {
 		t.Errorf("Do returned after %s, want right after the cancellation", elapsed)
+	}
+	select {
+	case path := <-reached:
+		t.Errorf("%s reached the server while waiting for the profile lock", path)
+	default:
 	}
 }
