@@ -1,11 +1,14 @@
 # Terraform Provider for NextDNS
 
 > [!WARNING]
-> This provider is not affiliated with or endorsed by NextDNS, and was developed with the assistance of Claude Code.
+> This provider is not affiliated with or endorsed by NextDNS Inc. 
+> Developed with the assistance of Claude Code.
 
 Manage [NextDNS](https://nextdns.io/) profiles with Terraform.
 
 ## Usage
+
+The documentation of every resource and data source is on the [Terraform Registry](https://registry.terraform.io/providers/jfgmesquita/nextdns/latest/docs).
 
 ```terraform
 terraform {
@@ -24,7 +27,7 @@ resource "nextdns_profile" "office" {
 }
 ```
 
-Create an API key on the [NextDNS account page](https://my.nextdns.io/account). The documentation of every resource and data source is on the [Terraform Registry](https://registry.terraform.io/providers/jfgmesquita/nextdns/latest/docs).
+Create an API key on the [NextDNS account page](https://my.nextdns.io/account).
 
 ## Development
 
