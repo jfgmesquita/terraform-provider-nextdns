@@ -1,6 +1,7 @@
 package nextdns
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -233,5 +234,38 @@ func TestProfileIDFromPath(t *testing.T) {
 		if got := profileIDFromPath(path); got != want {
 			t.Errorf("profileIDFromPath(%q) = %q, want %q", path, got, want)
 		}
+	}
+}
+
+func TestDoStopsWaitingWhenCancelled(t *testing.T) {
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-release
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(server.Close)
+	t.Cleanup(func() { close(release) })
+
+	client := NewClient("test-key")
+	client.BaseURL = server.URL
+
+	// A slow change holds the profile's lock.
+	go func() {
+		_ = client.Do(context.Background(), http.MethodPatch, "/profiles/abc123/security", map[string]bool{}, nil)
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	// A second change to the same profile waits, and must return as soon as
+	// its context is cancelled.
+	ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	err := client.Do(ctx, http.MethodPatch, "/profiles/abc123/privacy", map[string]bool{}, nil)
+
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("error = %v, want context.DeadlineExceeded", err)
+	}
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Errorf("Do returned after %s, want right after the cancellation", elapsed)
 	}
 }

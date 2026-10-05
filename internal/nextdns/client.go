@@ -27,7 +27,7 @@ type Client struct {
 	// same profile at once, so changes to a profile are sent one at a time,
 	// using one lock per profile ID.
 	mu           sync.Mutex
-	profileLocks map[string]*sync.Mutex
+	profileLocks map[string]chan struct{}
 }
 
 // NewClient returns a client that authenticates with the given API key.
@@ -112,9 +112,15 @@ type response struct {
 func (c *Client) Do(ctx context.Context, method, path string, body, out any) error {
 	if method != http.MethodGet {
 		if id := profileIDFromPath(path); id != "" {
+			// The lock is a channel with room for one value, so waiting for it
+			// can stop when the context is cancelled.
 			lock := c.profileLock(id)
-			lock.Lock()
-			defer lock.Unlock()
+			select {
+			case lock <- struct{}{}:
+				defer func() { <-lock }()
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 
@@ -173,16 +179,16 @@ func (c *Client) Do(ctx context.Context, method, path string, body, out any) err
 }
 
 // profileLock returns the lock for changes to the given profile.
-func (c *Client) profileLock(id string) *sync.Mutex {
+func (c *Client) profileLock(id string) chan struct{} {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if c.profileLocks == nil {
-		c.profileLocks = map[string]*sync.Mutex{}
+		c.profileLocks = map[string]chan struct{}{}
 	}
 	lock, ok := c.profileLocks[id]
 	if !ok {
-		lock = &sync.Mutex{}
+		lock = make(chan struct{}, 1)
 		c.profileLocks[id] = lock
 	}
 	return lock
