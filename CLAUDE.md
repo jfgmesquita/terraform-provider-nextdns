@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Terraform provider for [NextDNS](https://nextdns.io/), built on [terraform-plugin-framework](https://github.com/hashicorp/terraform-provider-scaffolding-framework). Published as `jfgmesquita/nextdns`. Not affiliated with NextDNS.
+Terraform provider for [NextDNS](https://nextdns.io/), built on [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework). Published as `jfgmesquita/nextdns`. Not affiliated with NextDNS.
 
 ## Commands
 
