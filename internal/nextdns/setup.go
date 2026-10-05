@@ -11,7 +11,9 @@ type Setup struct {
 	IPv4     []string      `json:"ipv4"`
 	IPv6     []string      `json:"ipv6"`
 	LinkedIP SetupLinkedIP `json:"linkedIp"`
-	DNSCrypt string        `json:"dnscrypt"`
+	// DNSCrypt is a DNS stamp ("sdns://...") of the DNS-over-HTTPS endpoint,
+	// despite its name in the API.
+	DNSCrypt string `json:"dnscrypt"`
 }
 
 // SetupLinkedIP holds the linked IP details. NextDNS identifies IPv4 queries

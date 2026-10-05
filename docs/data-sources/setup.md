@@ -49,7 +49,7 @@ output "office_update_token" {
 
 ### Read-Only
 
-- `dnscrypt` (String) DNSCrypt stamp of this profile.
+- `dns_stamp` (String) DNS stamp of this profile's DNS-over-HTTPS endpoint.
 - `doh_url` (String) DNS-over-HTTPS endpoint of this profile: `https://dns.nextdns.io/<profile ID>`.
 - `dot_hostname` (String) DNS-over-TLS/QUIC endpoint of this profile: `<profile ID>.dns.nextdns.io`.
 - `ipv4` (List of String) IPv4 DNS servers dedicated to this profile. Usually empty: for IPv4, use `linked_ip_servers`.

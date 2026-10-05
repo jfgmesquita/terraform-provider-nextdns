@@ -29,6 +29,8 @@ data "nextdns_setup" "test" {
 					statecheck.ExpectKnownValue("data.nextdns_setup.test", tfjsonpath.New("linked_ip_servers"), knownvalue.ListSizeExact(2)),
 					statecheck.ExpectKnownValue("data.nextdns_setup.test", tfjsonpath.New("linked_ip"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.nextdns_setup.test", tfjsonpath.New("linked_ip_update_token"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.nextdns_setup.test", tfjsonpath.New("dns_stamp"),
+						knownvalue.StringRegexp(regexp.MustCompile(`^sdns://`))),
 					statecheck.ExpectKnownValue("data.nextdns_setup.test", tfjsonpath.New("doh_url"),
 						knownvalue.StringRegexp(regexp.MustCompile(`^https://dns\.nextdns\.io/[0-9a-f]+$`))),
 					statecheck.ExpectKnownValue("data.nextdns_setup.test", tfjsonpath.New("dot_hostname"),

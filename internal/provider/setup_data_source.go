@@ -32,7 +32,7 @@ type SetupDataSourceModel struct {
 	LinkedIP            types.String `tfsdk:"linked_ip"`
 	LinkedIPDDNS        types.String `tfsdk:"linked_ip_ddns"`
 	LinkedIPUpdateToken types.String `tfsdk:"linked_ip_update_token"`
-	DNSCrypt            types.String `tfsdk:"dnscrypt"`
+	DNSStamp            types.String `tfsdk:"dns_stamp"`
 	DoHURL              types.String `tfsdk:"doh_url"`
 	DoTHostname         types.String `tfsdk:"dot_hostname"`
 }
@@ -78,8 +78,8 @@ func (d *SetupDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed:  true,
 				Sensitive: true,
 			},
-			"dnscrypt": schema.StringAttribute{
-				MarkdownDescription: "DNSCrypt stamp of this profile.",
+			"dns_stamp": schema.StringAttribute{
+				MarkdownDescription: "DNS stamp of this profile's DNS-over-HTTPS endpoint.",
 				Computed:            true,
 			},
 			"doh_url": schema.StringAttribute{
@@ -136,7 +136,7 @@ func (d *SetupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	data.LinkedIP = types.StringPointerValue(setup.LinkedIP.IP)
 	data.LinkedIPDDNS = types.StringPointerValue(setup.LinkedIP.DDNS)
 	data.LinkedIPUpdateToken = types.StringValue(setup.LinkedIP.UpdateToken)
-	data.DNSCrypt = types.StringValue(setup.DNSCrypt)
+	data.DNSStamp = types.StringValue(setup.DNSCrypt)
 	data.DoHURL = types.StringValue("https://dns.nextdns.io/" + profileID)
 	data.DoTHostname = types.StringValue(profileID + ".dns.nextdns.io")
 
