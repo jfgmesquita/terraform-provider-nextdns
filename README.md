@@ -1,7 +1,8 @@
 # Terraform Provider for NextDNS
 
 > [!WARNING]
-> This provider is not affiliated with or endorsed by NextDNS, and was developed with the assistance of Claude Code.
+> This provider is not affiliated with or endorsed by NextDNS Inc. 
+> Developed with the assistance of Claude Code.
 
 Manage [NextDNS](https://nextdns.io/) profiles with Terraform.
 
