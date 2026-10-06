@@ -15,7 +15,8 @@ The documentation of every resource and data source is on the [Terraform Registr
 terraform {
   required_providers {
     nextdns = {
-      source = "jfgmesquita/nextdns"
+      source  = "jfgmesquita/nextdns"
+      version = "~> 0.1.0"
     }
   }
 }
