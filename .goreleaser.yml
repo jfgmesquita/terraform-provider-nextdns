@@ -68,4 +68,6 @@ release:
   # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
 changelog:
-  disable: true
+  # GitHub's generated release notes: the pull requests merged since the
+  # previous tag.
+  use: github-native
