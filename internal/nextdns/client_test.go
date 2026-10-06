@@ -1,12 +1,16 @@
 package nextdns
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // newTestClient returns a client that talks to a fake NextDNS server, which
@@ -179,5 +183,98 @@ func TestDoFollowsRedirectOnSameHost(t *testing.T) {
 	}
 	if out.Name != "Home" {
 		t.Errorf("name = %q, want %q", out.Name, "Home")
+	}
+}
+
+func TestDoSendsChangesToOneProfileOneAtATime(t *testing.T) {
+	var inFlight, maxInFlight atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := inFlight.Add(1)
+		defer inFlight.Add(-1)
+		for {
+			m := maxInFlight.Load()
+			if n <= m || maxInFlight.CompareAndSwap(m, n) {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(server.Close)
+
+	client := NewClient("test-key")
+	client.BaseURL = server.URL
+
+	var wg sync.WaitGroup
+	for _, section := range []string{"security", "privacy", "settings", "denylist", "allowlist"} {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := client.Do(t.Context(), http.MethodPatch, "/profiles/abc123/"+section, map[string]bool{}, nil); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if got := maxInFlight.Load(); got != 1 {
+		t.Errorf("NextDNS received %d changes to the same profile at once, want 1", got)
+	}
+}
+
+func TestProfileIDFromPath(t *testing.T) {
+	tests := map[string]string{
+		"/profiles":                          "",
+		"/profiles/abc123":                   "abc123",
+		"/profiles/abc123/security":          "abc123",
+		"/profiles/abc123/rewrites/r910xzju": "abc123",
+		"/privacy/blocklists":                "",
+	}
+	for path, want := range tests {
+		if got := profileIDFromPath(path); got != want {
+			t.Errorf("profileIDFromPath(%q) = %q, want %q", path, got, want)
+		}
+	}
+}
+
+func TestDoStopsWaitingWhenCancelled(t *testing.T) {
+	// The server reports each request it receives, then holds it until the
+	// test ends.
+	reached := make(chan string, 2)
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached <- r.URL.Path
+		<-release
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(server.Close)
+	t.Cleanup(func() { close(release) })
+
+	client := NewClient("test-key")
+	client.BaseURL = server.URL
+
+	// A first change reaches the server and holds the profile's lock.
+	go func() {
+		_ = client.Do(context.Background(), http.MethodPatch, "/profiles/abc123/security", map[string]bool{}, nil)
+	}()
+	<-reached
+
+	// A second change to the same profile waits for the lock, and must return
+	// as soon as its context is cancelled, without reaching the server.
+	ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	err := client.Do(ctx, http.MethodPatch, "/profiles/abc123/privacy", map[string]bool{}, nil)
+
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("error = %v, want context.DeadlineExceeded", err)
+	}
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Errorf("Do returned after %s, want right after the cancellation", elapsed)
+	}
+	select {
+	case path := <-reached:
+		t.Errorf("%s reached the server while waiting for the profile lock", path)
+	default:
 	}
 }
