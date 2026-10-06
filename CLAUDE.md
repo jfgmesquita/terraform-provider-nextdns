@@ -31,6 +31,15 @@ CI (`.github/workflows/test.yml`) runs build, lint, `make generate` with a diff 
 - Examples target enterprise use (office or team profiles).
 - After changing a description or example, run `make generate` and commit `docs/`.
 
+## Releasing
+
+- Versions follow SemVer. While on `0.x`, new features and breaking changes bump MINOR; bug fixes bump PATCH.
+- Tag `vX.Y.Z` on an up-to-date `main` and push the tag. The Release workflow builds the binaries, signs the checksums with the GPG key in the `GPG_PRIVATE_KEY` and `PASSPHRASE` secrets, and creates the GitHub release; the Terraform Registry picks it up.
+- Release notes are generated from the titles of the merged pull requests. Add breaking changes at the top of the notes by hand.
+- Never move or reuse a published tag: fix problems with a new PATCH release.
+- On a MINOR release, update the `version` constraint in the README's usage example.
+- The Registry shows the `docs/` of each tag, so documentation changes appear there with the next release.
+
 ## API behaviour
 
 The official docs (https://nextdns.github.io/api/) are incomplete. Verified behaviour:
