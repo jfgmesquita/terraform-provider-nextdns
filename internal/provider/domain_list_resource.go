@@ -64,10 +64,8 @@ func (r *DomainListResource) Metadata(ctx context.Context, req resource.Metadata
 func (r *DomainListResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: fmt.Sprintf("The %s of a NextDNS profile. %s\n\n", r.list, r.description) +
-			fmt.Sprintf("This resource manages the whole %s: domains added outside Terraform are removed on the next apply.\n\n", r.list) +
-			"Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: " +
-			"Terraform only stops managing it. To remove domains, delete their blocks and apply.\n\n" +
-			profilePartNotes("nextdns_"+r.list),
+			fmt.Sprintf("~> Removing this resource from the configuration does not delete the %s in NextDNS: ", r.list) +
+			"Terraform only stops managing it. To remove individual domains, delete their blocks from the resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{
@@ -84,11 +82,11 @@ func (r *DomainListResource) Schema(ctx context.Context, req resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							MarkdownDescription: "The domain, for example `example.com`.",
+							MarkdownDescription: "The domain, for example, `example.com`.",
 							Required:            true,
 						},
 						"active": schema.BoolAttribute{
-							MarkdownDescription: "Whether this entry is active. Inactive entries stay in the list but have no effect. Defaults to `true`.",
+							MarkdownDescription: "Whether this entry is active. Inactive entries stay in the list, but have no effect. Defaults to `true`.",
 							Optional:            true,
 							Computed:            true,
 							Default:             booldefault.StaticBool(true),

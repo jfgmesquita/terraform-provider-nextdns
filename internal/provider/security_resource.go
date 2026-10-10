@@ -128,7 +128,7 @@ func (r *SecurityResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 		},
 		"tlds": schema.SetAttribute{
-			MarkdownDescription: "Block all domains and subdomains belonging to specific top-level domains (TLDs). Values are TLDs without the dot, for example `[\"zip\", \"mov\"]`.",
+			MarkdownDescription: "Block all domains and subdomains belonging to specific top-level domains (TLDs). Values are TLDs without the dot, for example, `[\"zip\", \"mov\"]`.",
 			ElementType:         types.StringType,
 			Optional:            true,
 			Computed:            true,
@@ -146,10 +146,8 @@ func (r *SecurityResource) Schema(ctx context.Context, req resource.SchemaReques
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The security settings of a NextDNS profile.\n\n" +
-			"This resource manages all security settings: any setting left out of the configuration is turned off.\n\n" +
-			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them. To turn protections off, set them to `false` and apply.\n\n" +
-			profilePartNotes("nextdns_security"),
+			"~> Removing this resource from the configuration does not change the security settings in NextDNS: " +
+			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them from the resource.",
 		Attributes: attributes,
 	}
 }

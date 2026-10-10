@@ -1,11 +1,9 @@
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is turned off,
-# and any list left out is emptied.
-resource "nextdns_privacy" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_privacy" "office" {
+  profile_id = nextdns_profile.office.id
 
   # IDs from https://api.nextdns.io/privacy/blocklists
   blocklists = ["nextdns-recommended", "oisd"]

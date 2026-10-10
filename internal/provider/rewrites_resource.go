@@ -53,12 +53,8 @@ func (r *RewritesResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The rewrites of a NextDNS profile. Set or override the DNS response for any domain. " +
 			"Rewrites apply to subdomains as well, and local IP addresses are supported as answers.\n\n" +
-			"This resource manages all rewrites of the profile: rewrites added outside Terraform are removed on the next apply.\n\n" +
-			"Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: " +
-			"Terraform only stops managing the rewrites. To remove rewrites, delete their blocks and apply.\n\n" +
-			profilePartNotes("nextdns_rewrites") + "\n\n" +
-			"~> NextDNS can only add or delete one rewrite at a time. If an apply fails partway, some changes may " +
-			"already be made: run `terraform apply` again to finish them.",
+			"~> Removing this resource from the configuration does not delete the rewrites in NextDNS: " +
+			"Terraform only stops managing them. To remove individual rewrites, delete their blocks from the resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{
@@ -75,12 +71,12 @@ func (r *RewritesResource) Schema(ctx context.Context, req resource.SchemaReques
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"domain": schema.StringAttribute{
-							MarkdownDescription: "The domain to rewrite, for example `router.home`. Its subdomains are rewritten too.",
+							MarkdownDescription: "The domain to rewrite, for example, `example.com`. Its subdomains are rewritten too.",
 							Required:            true,
 						},
 						"answer": schema.StringAttribute{
 							MarkdownDescription: "The answer: an IPv4 address, an IPv6 address or a domain name, " +
-								"for example `192.168.1.1`. NextDNS picks the record type (A, AAAA or CNAME) from it.",
+								"for example, `192.168.1.1`. NextDNS picks the record type (A, AAAA or CNAME) from it.",
 							Required: true,
 						},
 					},

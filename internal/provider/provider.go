@@ -43,7 +43,7 @@ func (p *NextDNSProvider) Schema(ctx context.Context, req provider.SchemaRequest
 		MarkdownDescription: "Manage NextDNS profiles.",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "NextDNS API key, from https://my.nextdns.io/account. Can also be set with the `NEXTDNS_API_KEY` environment variable.",
+				MarkdownDescription: "API key used to authenticate with NextDNS. Can also be set with the `NEXTDNS_API_KEY` environment variable. Get your key at https://my.nextdns.io/account.",
 				Optional:            true,
 				Sensitive:           true,
 			},

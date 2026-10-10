@@ -92,10 +92,8 @@ func (r *SettingsResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The general settings of a NextDNS profile: logs, block page, performance, " +
 			"bypass age verification and Web3. The profile name is set in `nextdns_profile`.\n\n" +
-			"This resource manages all these settings: any setting left out of the configuration is set to its default.\n\n" +
-			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them.\n\n" +
-			profilePartNotes("nextdns_settings"),
+			"~> Removing this resource from the configuration does not change the settings in NextDNS: " +
+			"Terraform only stops managing them. To reset a setting to its default, remove it from the resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{
@@ -107,13 +105,13 @@ func (r *SettingsResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"logs_enabled": boolSetting("Log the DNS queries of this profile."),
 			"logs_client_ips": schema.BoolAttribute{
-				MarkdownDescription: "Privacy adjustment: log client IP addresses. Defaults to `true`.",
+				MarkdownDescription: "Log client IP addresses. Defaults to `true`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
 			},
 			"logs_domains": schema.BoolAttribute{
-				MarkdownDescription: "Privacy adjustment: log domains. Defaults to `true`.",
+				MarkdownDescription: "Log domains. Defaults to `true`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
@@ -136,7 +134,7 @@ func (r *SettingsResource) Schema(ctx context.Context, req resource.SchemaReques
 			"block_page": boolSetting("Display a block page when a domain is being blocked. This may slightly increase page load time " +
 				"and an HTTPS warning may appear in some cases. When disabled, blocked queries will be answered with the " +
 				"unspecified address (0.0.0.0 or ::)."),
-			"anonymized_ecs": boolSetting("Anonymized EDNS Client Subnet: speed up the delivery of data from content delivery " +
+			"anonymized_ecs": boolSetting("Speed up the delivery of data from content delivery " +
 				"networks without exposing your IP address."),
 			"cache_boost": boolSetting("Minimize DNS queries by enforcing a minimum TTL (Time to live)."),
 			"cname_flattening": boolSetting("Prevent CNAME-chasing resolvers from making unnecessary queries and polluting " +

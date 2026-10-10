@@ -1,2 +1,3 @@
-# Reads the API key from the NEXTDNS_API_KEY environment variable.
-provider "nextdns" {}
+provider "nextdns" {
+  api_key = var.nextdns_api_key
+}

@@ -9,25 +9,17 @@ description: |-
 
 The privacy settings of a NextDNS profile.
 
-This resource manages all privacy settings: any setting left out of the configuration is turned off, and any list left out is emptied.
-
-Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: Terraform only stops managing them. To turn settings off, set them to `false` or remove them, and apply.
-
-~> Use only one `nextdns_privacy` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
+~> Removing this resource from the configuration does not change the privacy settings in NextDNS: Terraform only stops managing them. To turn settings off, set them to `false` or remove them from the resource.
 
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is turned off,
-# and any list left out is emptied.
-resource "nextdns_privacy" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_privacy" "office" {
+  profile_id = nextdns_profile.office.id
 
   # IDs from https://api.nextdns.io/privacy/blocklists
   blocklists = ["nextdns-recommended", "oisd"]
@@ -50,27 +42,25 @@ resource "nextdns_privacy" "home" {
 ### Optional
 
 - `allow_affiliate` (Boolean) Allow affiliate & tracking domains common on deals websites, in emails or in search results. Those usually only get called after manually clicking on a link. Your IP address will automatically be hidden from those websites to preserve your privacy. Defaults to `false`.
-- `blocklists` (Set of String) Block ads & trackers using the most popular blocklists available — all updated in real time. Values are blocklist IDs, for example `["nextdns-recommended", "oisd"]`. The available IDs are listed at https://api.nextdns.io/privacy/blocklists.
+- `blocklists` (Set of String) Block ads & trackers using the most popular blocklists available — all updated in real time. Values are blocklist IDs, for example, `["nextdns-recommended", "oisd"]`. The available IDs are listed at https://api.nextdns.io/privacy/blocklists.
 - `disguised_trackers` (Boolean) Automatically detect and block third-party trackers disguising themselves as first-party to circumvent browser privacy protections like ITP. Defaults to `false`.
-- `natives` (Set of String) Native tracking protection: block trackers — often operating at the operating system level — that monitor a broad range of your activity on a device. This could include all the websites you visit, everything you type or your location at all times. Values are vendor IDs, for example `["apple", "windows"]`. The available IDs are listed at https://api.nextdns.io/privacy/natives.
+- `natives` (Set of String) Block trackers — often operating at the operating system level — that monitor a broad range of your activity on a device. This could include all the websites you visit, everything you type or your location at all times. Values are vendor IDs, for example, `["apple", "windows"]`. The available IDs are listed at https://api.nextdns.io/privacy/natives.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
-  to = nextdns_privacy.home
-  id = "abc123"
+  to = nextdns_privacy.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_privacy.home "abc123"
+terraform import nextdns_privacy.office "$NEXTDNS_PROFILE_ID"
 ```

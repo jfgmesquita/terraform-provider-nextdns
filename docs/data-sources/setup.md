@@ -9,9 +9,9 @@ description: |-
 
 The endpoints and DNS servers of a NextDNS profile. Use them to configure routers, firewalls or devices with a profile managed by Terraform.
 
-Endpoints: set up NextDNS with this profile using one of the endpoints (`dot_hostname`, `doh_url` or `ipv6`).
+Set up NextDNS with this profile using one of the endpoints (`dot_hostname`, `doh_url` or `ipv6`).
 
-Linked IP: if you are unable to set up NextDNS using the NextDNS apps, DNS-over-TLS, DNS-over-HTTPS or IPv6, then use the DNS servers in `linked_ip_servers` and link your IP. This is mostly for use on home networks and not recommended on mobile.
+If you are unable to set up NextDNS using the NextDNS apps, DNS-over-TLS, DNS-over-HTTPS or IPv6, then use the DNS servers in `linked_ip_servers` and link your IP. This is mostly for use on home networks and not recommended on mobile.
 
 ## Example Usage
 
@@ -24,7 +24,6 @@ data "nextdns_setup" "office" {
   profile_id = nextdns_profile.office.id
 }
 
-# For example, to configure company laptops through an MDM tool.
 output "office_doh_url" {
   value = data.nextdns_setup.office.doh_url
 }
@@ -33,7 +32,6 @@ output "office_dns_servers" {
   value = concat(data.nextdns_setup.office.ipv6, data.nextdns_setup.office.linked_ip_servers)
 }
 
-# Sensitive: Terraform only shows it with `terraform output office_update_token`.
 output "office_update_token" {
   value     = data.nextdns_setup.office.linked_ip_update_token
   sensitive = true
@@ -53,8 +51,8 @@ output "office_update_token" {
 - `doh_url` (String) DNS-over-HTTPS endpoint of this profile: `https://dns.nextdns.io/<profile ID>`.
 - `dot_hostname` (String) DNS-over-TLS/QUIC endpoint of this profile: `<profile ID>.dns.nextdns.io`.
 - `ipv4` (List of String) IPv4 DNS servers dedicated to this profile. Usually empty: for IPv4, use `linked_ip_servers`.
-- `ipv6` (List of String) IPv6 endpoint: the IPv6 DNS servers of this profile.
-- `linked_ip` (String) Linked IP: the public IP address linked to this profile. Null if no IP is linked.
+- `ipv6` (List of String) The IPv6 DNS servers of this profile.
+- `linked_ip` (String) The public IP address linked to this profile. Null if no IP is linked.
 - `linked_ip_ddns` (String) The DDNS hostname whose IP address is linked to this profile. Null if none is set.
-- `linked_ip_servers` (List of String) Linked IP DNS servers: IPv4 DNS servers that identify this profile by its linked IP, the public IP address queries come from.
-- `linked_ip_update_token` (String, Sensitive) Token to update the linked IP, for example from a router on a dynamic IP address. It is a secret: anyone with it can change the linked IP. Like every value Terraform reads, it is stored in the Terraform state, so keep the state secure.
+- `linked_ip_servers` (List of String) IPv4 DNS servers that identify this profile by its linked IP, the public IP address queries come from.
+- `linked_ip_update_token` (String, Sensitive) Token to update the linked IP, for example, from a router on a dynamic IP address. Anyone with it can change the linked IP.

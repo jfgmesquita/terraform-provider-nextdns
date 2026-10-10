@@ -49,8 +49,8 @@ func (d *SetupDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The endpoints and DNS servers of a NextDNS profile. " +
 			"Use them to configure routers, firewalls or devices with a profile managed by Terraform.\n\n" +
-			"Endpoints: set up NextDNS with this profile using one of the endpoints (`dot_hostname`, `doh_url` or `ipv6`).\n\n" +
-			"Linked IP: if you are unable to set up NextDNS using the NextDNS apps, DNS-over-TLS, DNS-over-HTTPS or IPv6, " +
+			"Set up NextDNS with this profile using one of the endpoints (`dot_hostname`, `doh_url` or `ipv6`).\n\n" +
+			"If you are unable to set up NextDNS using the NextDNS apps, DNS-over-TLS, DNS-over-HTTPS or IPv6, " +
 			"then use the DNS servers in `linked_ip_servers` and link your IP. " +
 			"This is mostly for use on home networks and not recommended on mobile.",
 
@@ -60,11 +60,11 @@ func (d *SetupDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 				Required:            true,
 			},
 			"ipv4": stringList("IPv4 DNS servers dedicated to this profile. Usually empty: for IPv4, use `linked_ip_servers`."),
-			"ipv6": stringList("IPv6 endpoint: the IPv6 DNS servers of this profile."),
-			"linked_ip_servers": stringList("Linked IP DNS servers: IPv4 DNS servers that identify this profile by its linked IP, " +
+			"ipv6": stringList("The IPv6 DNS servers of this profile."),
+			"linked_ip_servers": stringList("IPv4 DNS servers that identify this profile by its linked IP, " +
 				"the public IP address queries come from."),
 			"linked_ip": schema.StringAttribute{
-				MarkdownDescription: "Linked IP: the public IP address linked to this profile. Null if no IP is linked.",
+				MarkdownDescription: "The public IP address linked to this profile. Null if no IP is linked.",
 				Computed:            true,
 			},
 			"linked_ip_ddns": schema.StringAttribute{
@@ -72,9 +72,8 @@ func (d *SetupDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed:            true,
 			},
 			"linked_ip_update_token": schema.StringAttribute{
-				MarkdownDescription: "Token to update the linked IP, for example from a router on a dynamic IP address. " +
-					"It is a secret: anyone with it can change the linked IP. Like every value Terraform reads, " +
-					"it is stored in the Terraform state, so keep the state secure.",
+				MarkdownDescription: "Token to update the linked IP, for example, from a router on a dynamic IP address. " +
+					"Anyone with it can change the linked IP.",
 				Computed:  true,
 				Sensitive: true,
 			},

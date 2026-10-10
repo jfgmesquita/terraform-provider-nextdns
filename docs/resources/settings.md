@@ -9,24 +9,17 @@ description: |-
 
 The general settings of a NextDNS profile: logs, block page, performance, bypass age verification and Web3. The profile name is set in `nextdns_profile`.
 
-This resource manages all these settings: any setting left out of the configuration is set to its default.
-
-Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: Terraform only stops managing them.
-
-~> Use only one `nextdns_settings` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
+~> Removing this resource from the configuration does not change the settings in NextDNS: Terraform only stops managing them. To reset a setting to its default, remove it from the resource.
 
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is set to its default.
-resource "nextdns_settings" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_settings" "office" {
+  profile_id = nextdns_profile.office.id
 
   logs_enabled    = true
   logs_client_ips = true
@@ -41,7 +34,8 @@ resource "nextdns_settings" "home" {
   cname_flattening = true
 
   bypass_age_verification = false
-  web3                    = false
+
+  web3 = false
 }
 ```
 
@@ -54,13 +48,13 @@ resource "nextdns_settings" "home" {
 
 ### Optional
 
-- `anonymized_ecs` (Boolean) Anonymized EDNS Client Subnet: speed up the delivery of data from content delivery networks without exposing your IP address. Defaults to `false`.
+- `anonymized_ecs` (Boolean) Speed up the delivery of data from content delivery networks without exposing your IP address. Defaults to `false`.
 - `block_page` (Boolean) Display a block page when a domain is being blocked. This may slightly increase page load time and an HTTPS warning may appear in some cases. When disabled, blocked queries will be answered with the unspecified address (0.0.0.0 or ::). Defaults to `false`.
 - `bypass_age_verification` (Boolean) Automatically bypass age verification checks used by certain websites, such as adult content sites, to verify a visitor’s age before allowing access. By enabling this feature, you acknowledge that you are legally old enough to access the content. Defaults to `false`.
 - `cache_boost` (Boolean) Minimize DNS queries by enforcing a minimum TTL (Time to live). Defaults to `false`.
 - `cname_flattening` (Boolean) Prevent CNAME-chasing resolvers from making unnecessary queries and polluting the logs with intermediate domains. Defaults to `false`.
-- `logs_client_ips` (Boolean) Privacy adjustment: log client IP addresses. Defaults to `true`.
-- `logs_domains` (Boolean) Privacy adjustment: log domains. Defaults to `true`.
+- `logs_client_ips` (Boolean) Log client IP addresses. Defaults to `true`.
+- `logs_domains` (Boolean) Log domains. Defaults to `true`.
 - `logs_enabled` (Boolean) Log the DNS queries of this profile. Defaults to `false`.
 - `logs_location` (String) Where logs are stored: `us` (United States), `eu` (European Union) or `ch` (Switzerland). Defaults to `us`.
 - `logs_retention` (String) How long logs are kept: one of `1 hour`, `6 hours`, `1 day`, `1 week`, `1 month`, `3 months`, `6 months`, `1 year`, `2 years`. Defaults to `3 months`.
@@ -68,21 +62,19 @@ resource "nextdns_settings" "home" {
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
-  to = nextdns_settings.home
-  id = "abc123"
+  to = nextdns_settings.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_settings.home "abc123"
+terraform import nextdns_settings.office "$NEXTDNS_PROFILE_ID"
 ```

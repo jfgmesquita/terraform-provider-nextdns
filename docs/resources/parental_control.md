@@ -9,13 +9,7 @@ description: |-
 
 The parental control settings of a NextDNS profile.
 
-This resource manages all parental control settings: any setting left out of the configuration is turned off, and any service, category or recreation time left out is removed.
-
-Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: Terraform only stops managing them. To turn settings off, set them to `false` or remove them, and apply.
-
-~> Use only one `nextdns_parental_control` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
+~> Removing this resource from the configuration does not change the parental control settings in NextDNS: Terraform only stops managing them. To turn settings off, set them to `false` or remove them from the resource.
 
 ## Example Usage
 
@@ -24,21 +18,15 @@ resource "nextdns_profile" "office" {
   name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is turned off, and any
-# service, category or recreation time left out is removed.
 resource "nextdns_parental_control" "office" {
   profile_id = nextdns_profile.office.id
-
-  safe_search             = true
-  youtube_restricted_mode = false
-  block_bypass            = true # VPNs, proxies and other DNS providers
 
   # Keys are IDs from https://api.nextdns.io/parentalcontrol/services
   services = {
     tiktok  = {}
     steam   = {}
     netflix = { recreation = true } # allowed during the lunch break
-    twitch  = { active = false }    # stays in the list, but has no effect
+    twitch  = { active = false }
   }
 
   # Keys are IDs from https://api.nextdns.io/parentalcontrol/categories
@@ -48,7 +36,7 @@ resource "nextdns_parental_control" "office" {
     "social-networks" = { recreation = true }
   }
 
-  # Lunch break on weekdays. Days left out have no recreation time.
+  # Lunch break on weekdays.
   recreation {
     timezone  = "Europe/Lisbon"
     monday    = { start = "12:30", end = "14:00" }
@@ -57,6 +45,10 @@ resource "nextdns_parental_control" "office" {
     thursday  = { start = "12:30", end = "14:00" }
     friday    = { start = "12:30", end = "14:00" }
   }
+
+  safe_search             = true
+  youtube_restricted_mode = false
+  block_bypass            = false
 }
 ```
 
@@ -69,19 +61,19 @@ resource "nextdns_parental_control" "office" {
 
 ### Optional
 
-- `block_bypass` (Boolean) Block bypass methods: prevent or hinder the use of methods that can help bypass NextDNS filtering on the network. This includes VPNs, proxies, Tor-related software and encrypted DNS providers. Defaults to `false`.
-- `categories` (Attributes Map) Categories: restrict access to specific categories of websites and apps. Map keys are category IDs, for example `gambling`; the available IDs are listed at https://api.nextdns.io/parentalcontrol/categories. Use `{}` for the defaults, for example `gambling = {}`. (see [below for nested schema](#nestedatt--categories))
-- `recreation` (Block, Optional) Recreation time: set a period for each day of the week during which the services and categories with `recreation = true` will not be blocked — e.g., allow Facebook on Mondays and Tuesdays between 6pm and 8pm. Leave out a day to have no recreation time on that day. (see [below for nested schema](#nestedblock--recreation))
-- `safe_search` (Boolean) SafeSearch: filter explicit results on all major search engines, including images and videos. This will also block access to search engines not supporting this feature. Defaults to `false`.
-- `services` (Attributes Map) Websites, apps & games: restrict access to specific websites, apps and games. Map keys are service IDs, for example `tiktok`; the available IDs are listed at https://api.nextdns.io/parentalcontrol/services. Use `{}` for the defaults, for example `tiktok = {}`. (see [below for nested schema](#nestedatt--services))
-- `youtube_restricted_mode` (Boolean) YouTube Restricted Mode: filter out mature videos on YouTube and block embedded mature videos from being watched on other websites. This will also hide all comments. Defaults to `false`.
+- `block_bypass` (Boolean) Prevent or hinder the use of methods that can help bypass NextDNS filtering on the network. This includes VPNs, proxies, Tor-related software and encrypted DNS providers. Defaults to `false`.
+- `categories` (Attributes Map) Restrict access to specific categories of websites and apps. Map keys are category IDs, for example, `gambling`. The available IDs are listed at https://api.nextdns.io/parentalcontrol/categories. (see [below for nested schema](#nestedatt--categories))
+- `recreation` (Block, Optional) Set a period for each day of the week during which the services and categories with `recreation = true` will not be blocked — e.g., allow Facebook on Mondays and Tuesdays between 6pm and 8pm. (see [below for nested schema](#nestedblock--recreation))
+- `safe_search` (Boolean) Filter explicit results on all major search engines, including images and videos. This will also block access to search engines not supporting this feature. Defaults to `false`.
+- `services` (Attributes Map) Restrict access to specific websites, apps and games. Map keys are service IDs, for example, `tiktok`. The available IDs are listed at https://api.nextdns.io/parentalcontrol/services. (see [below for nested schema](#nestedatt--services))
+- `youtube_restricted_mode` (Boolean) Filter out mature videos on YouTube and block embedded mature videos from being watched on other websites. This will also hide all comments. Defaults to `false`.
 
 <a id="nestedatt--categories"></a>
 ### Nested Schema for `categories`
 
 Optional:
 
-- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list but have no effect. Defaults to `true`.
+- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list, but have no effect. Defaults to `true`.
 - `recreation` (Boolean) Do not block this category during recreation time. Defaults to `false`.
 
 
@@ -90,22 +82,22 @@ Optional:
 
 Optional:
 
-- `friday` (Attributes) Recreation time on Friday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--friday))
-- `monday` (Attributes) Recreation time on Monday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--monday))
-- `saturday` (Attributes) Recreation time on Saturday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--saturday))
-- `sunday` (Attributes) Recreation time on Sunday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--sunday))
-- `thursday` (Attributes) Recreation time on Thursday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--thursday))
-- `timezone` (String) Timezone of the recreation times, for example `Europe/Lisbon`. Required when the block is set.
-- `tuesday` (Attributes) Recreation time on Tuesday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--tuesday))
-- `wednesday` (Attributes) Recreation time on Wednesday, for example `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--wednesday))
+- `friday` (Attributes) Recreation time on Friday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--friday))
+- `monday` (Attributes) Recreation time on Monday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--monday))
+- `saturday` (Attributes) Recreation time on Saturday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--saturday))
+- `sunday` (Attributes) Recreation time on Sunday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--sunday))
+- `thursday` (Attributes) Recreation time on Thursday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--thursday))
+- `timezone` (String) Timezone of the recreation times, for example, `Europe/Lisbon`. Required when the block is set. Must be a name from the [Time Zone Database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), as required by the [NextDNS API](https://nextdns.github.io/api/#timezone-format).
+- `tuesday` (Attributes) Recreation time on Tuesday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--tuesday))
+- `wednesday` (Attributes) Recreation time on Wednesday, for example, `{ start = "18:00", end = "20:00" }`. (see [below for nested schema](#nestedatt--recreation--wednesday))
 
 <a id="nestedatt--recreation--friday"></a>
 ### Nested Schema for `recreation.friday`
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 <a id="nestedatt--recreation--monday"></a>
@@ -113,8 +105,8 @@ Required:
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 <a id="nestedatt--recreation--saturday"></a>
@@ -122,8 +114,8 @@ Required:
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 <a id="nestedatt--recreation--sunday"></a>
@@ -131,8 +123,8 @@ Required:
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 <a id="nestedatt--recreation--thursday"></a>
@@ -140,8 +132,8 @@ Required:
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 <a id="nestedatt--recreation--tuesday"></a>
@@ -149,8 +141,8 @@ Required:
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 <a id="nestedatt--recreation--wednesday"></a>
@@ -158,8 +150,8 @@ Required:
 
 Required:
 
-- `end` (String) End time, in the format `HH:MM`.
-- `start` (String) Start time, in the format `HH:MM`.
+- `end` (String) End time, in 24-hour format `HH:MM`.
+- `start` (String) Start time, in 24-hour format `HH:MM`.
 
 
 
@@ -168,26 +160,24 @@ Required:
 
 Optional:
 
-- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list but have no effect. Defaults to `true`.
+- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list, but have no effect. Defaults to `true`.
 - `recreation` (Boolean) Do not block this service during recreation time. Defaults to `false`.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
   to = nextdns_parental_control.office
-  id = "abc123"
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_parental_control.office "abc123"
+terraform import nextdns_parental_control.office "$NEXTDNS_PROFILE_ID"
 ```

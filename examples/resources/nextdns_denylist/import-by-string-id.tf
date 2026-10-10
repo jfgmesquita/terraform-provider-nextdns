@@ -1,5 +1,5 @@
 # The import ID is the profile ID.
 import {
-  to = nextdns_denylist.home
-  id = "abc123"
+  to = nextdns_denylist.office
+  id = var.nextdns_profile_id
 }

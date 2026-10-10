@@ -9,55 +9,11 @@ description: |-
 
 The rewrites of a NextDNS profile. Set or override the DNS response for any domain. Rewrites apply to subdomains as well, and local IP addresses are supported as answers.
 
-This resource manages all rewrites of the profile: rewrites added outside Terraform are removed on the next apply.
-
-Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: Terraform only stops managing the rewrites. To remove rewrites, delete their blocks and apply.
-
-~> Use only one `nextdns_rewrites` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
-
-~> NextDNS can only add or delete one rewrite at a time. If an apply fails partway, some changes may already be made: run `terraform apply` again to finish them.
+~> Removing this resource from the configuration does not delete the rewrites in NextDNS: Terraform only stops managing them. To remove individual rewrites, delete their blocks from the resource.
 
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
-}
-
-# This resource manages all rewrites of the profile: rewrites added
-# outside Terraform are removed on the next apply.
-resource "nextdns_rewrites" "home" {
-  profile_id = nextdns_profile.home.id
-
-  # IPv4 address: NextDNS answers with an A record.
-  rewrite {
-    domain = "router.home"
-    answer = "192.168.1.1"
-  }
-
-  # IPv6 address: NextDNS answers with an AAAA record.
-  rewrite {
-    domain = "router.home"
-    answer = "fd00::1"
-  }
-
-  # Domain name: NextDNS answers with a CNAME record.
-  rewrite {
-    domain = "www.example.com"
-    answer = "example.org"
-  }
-}
-
-# For long lists, a dynamic block creates one rewrite block per item.
-locals {
-  hosts = {
-    "nas.home"     = "192.168.1.10"
-    "printer.home" = "192.168.1.20"
-  }
-}
-
 resource "nextdns_profile" "office" {
   name = "Office"
 }
@@ -65,8 +21,45 @@ resource "nextdns_profile" "office" {
 resource "nextdns_rewrites" "office" {
   profile_id = nextdns_profile.office.id
 
+  # IPv4 address: NextDNS answers with an A record.
+  rewrite {
+    domain = "example.com"
+    answer = "192.168.1.1"
+  }
+
+  # IPv6 address: NextDNS answers with an AAAA record.
+  rewrite {
+    domain = "example.org"
+    answer = "fd00::1"
+  }
+
+  # Domain name: NextDNS answers with a CNAME record.
+  rewrite {
+    domain = "example.net"
+    answer = "example.com"
+  }
+}
+```
+
+```terraform
+resource "nextdns_profile" "office" {
+  name = "Office"
+}
+
+# For long lists, a dynamic block creates one rewrite block per item.
+locals {
+  rewrites = {
+    "example.com" = "192.168.1.10"
+    "example.org" = "192.168.1.20"
+    "example.net" = "192.168.1.30"
+  }
+}
+
+resource "nextdns_rewrites" "office" {
+  profile_id = nextdns_profile.office.id
+
   dynamic "rewrite" {
-    for_each = local.hosts
+    for_each = local.rewrites
     content {
       domain = rewrite.key
       answer = rewrite.value
@@ -91,26 +84,24 @@ resource "nextdns_rewrites" "office" {
 
 Required:
 
-- `answer` (String) The answer: an IPv4 address, an IPv6 address or a domain name, for example `192.168.1.1`. NextDNS picks the record type (A, AAAA or CNAME) from it.
-- `domain` (String) The domain to rewrite, for example `router.home`. Its subdomains are rewritten too.
+- `answer` (String) The answer: an IPv4 address, an IPv6 address or a domain name, for example, `192.168.1.1`. NextDNS picks the record type (A, AAAA or CNAME) from it.
+- `domain` (String) The domain to rewrite, for example, `example.com`. Its subdomains are rewritten too.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
-  to = nextdns_rewrites.home
-  id = "abc123"
+  to = nextdns_rewrites.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_rewrites.home "abc123"
+terraform import nextdns_rewrites.office "$NEXTDNS_PROFILE_ID"
 ```

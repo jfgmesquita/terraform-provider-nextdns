@@ -44,7 +44,7 @@ func (r *ProfileResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Profile ID, for example `abc123`.",
+				MarkdownDescription: "Profile ID, for example, `abc123`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -55,7 +55,7 @@ func (r *ProfileResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Required:            true,
 			},
 			"fingerprint": schema.StringAttribute{
-				MarkdownDescription: "Profile fingerprint, used in the DNS-over-HTTPS and DNS-over-TLS addresses.",
+				MarkdownDescription: "The public identifier of the profile.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

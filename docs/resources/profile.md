@@ -12,8 +12,8 @@ A NextDNS profile. Its settings, such as security and privacy, are managed by th
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 ```
 
@@ -26,24 +26,22 @@ resource "nextdns_profile" "home" {
 
 ### Read-Only
 
-- `fingerprint` (String) Profile fingerprint, used in the DNS-over-HTTPS and DNS-over-TLS addresses.
-- `id` (String) Profile ID, for example `abc123`.
+- `fingerprint` (String) The public identifier of the profile.
+- `id` (String) Profile ID, for example, `abc123`.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 import {
-  to = nextdns_profile.home
-  id = "abc123"
+  to = nextdns_profile.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
-terraform import nextdns_profile.home "abc123"
+terraform import nextdns_profile.office "$NEXTDNS_PROFILE_ID"
 ```
