@@ -103,8 +103,8 @@ var entryAttributeTypes = map[string]attr.Type{"active": types.BoolType, "recrea
 
 func entryMap(kind, description, example, catalog string) schema.MapNestedAttribute {
 	return schema.MapNestedAttribute{
-		MarkdownDescription: description + " Map keys are " + kind + " IDs, for example `" + example + "`; " +
-			"the available IDs are listed at " + catalog + ". Use `{}` for the defaults, for example `" + example + " = {}`.",
+		MarkdownDescription: description + " Map keys are " + kind + " IDs, for example, `" + example + "`. " +
+			"The available IDs are listed at " + catalog + ".",
 		Optional: true,
 		Computed: true,
 		Default: mapdefault.StaticValue(types.MapValueMust(
@@ -112,7 +112,7 @@ func entryMap(kind, description, example, catalog string) schema.MapNestedAttrib
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: map[string]schema.Attribute{
 				"active": schema.BoolAttribute{
-					MarkdownDescription: "Whether this entry is active. Inactive entries stay in the list but have no effect. Defaults to `true`.",
+					MarkdownDescription: "Whether this entry is active. Inactive entries stay in the list, but have no effect. Defaults to `true`.",
 					Optional:            true,
 					Computed:            true,
 					Default:             booldefault.StaticBool(true),
@@ -130,18 +130,18 @@ func entryMap(kind, description, example, catalog string) schema.MapNestedAttrib
 
 func (r *ParentalControlResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	timeAttribute := func(day string) schema.SingleNestedAttribute {
-		hhmm := []validator.String{stringvalidator.RegexMatches(timeOfDay, "must be a time in the format HH:MM, for example 18:00")}
+		hhmm := []validator.String{stringvalidator.RegexMatches(timeOfDay, "must be a time in the format HH:MM, for example, 18:00")}
 		return schema.SingleNestedAttribute{
-			MarkdownDescription: "Recreation time on " + day + ", for example `{ start = \"18:00\", end = \"20:00\" }`.",
+			MarkdownDescription: "Recreation time on " + day + ", for example, `{ start = \"18:00\", end = \"20:00\" }`.",
 			Optional:            true,
 			Attributes: map[string]schema.Attribute{
 				"start": schema.StringAttribute{
-					MarkdownDescription: "Start time, in the format `HH:MM`.",
+					MarkdownDescription: "Start time, in 24-hour format `HH:MM`.",
 					Required:            true,
 					Validators:          hhmm,
 				},
 				"end": schema.StringAttribute{
-					MarkdownDescription: "End time, in the format `HH:MM`.",
+					MarkdownDescription: "End time, in 24-hour format `HH:MM`.",
 					Required:            true,
 					Validators:          hhmm,
 				},
@@ -151,11 +151,8 @@ func (r *ParentalControlResource) Schema(ctx context.Context, req resource.Schem
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The parental control settings of a NextDNS profile.\n\n" +
-			"This resource manages all parental control settings: any setting left out of the configuration is turned off, " +
-			"and any service, category or recreation time left out is removed.\n\n" +
-			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them, and apply.\n\n" +
-			profilePartNotes("nextdns_parental_control"),
+			"~> Removing this resource from the configuration does not change the parental control settings in NextDNS: " +
+			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them from the resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{
@@ -165,26 +162,28 @@ func (r *ParentalControlResource) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"safe_search": boolSetting("SafeSearch: filter explicit results on all major search engines, including images " +
+			"safe_search": boolSetting("Filter explicit results on all major search engines, including images " +
 				"and videos. This will also block access to search engines not supporting this feature."),
-			"youtube_restricted_mode": boolSetting("YouTube Restricted Mode: filter out mature videos on YouTube and block " +
+			"youtube_restricted_mode": boolSetting("Filter out mature videos on YouTube and block " +
 				"embedded mature videos from being watched on other websites. This will also hide all comments."),
-			"block_bypass": boolSetting("Block bypass methods: prevent or hinder the use of methods that can help bypass " +
+			"block_bypass": boolSetting("Prevent or hinder the use of methods that can help bypass " +
 				"NextDNS filtering on the network. This includes VPNs, proxies, Tor-related software and encrypted DNS providers."),
-			"services": entryMap("service", "Websites, apps & games: restrict access to specific websites, apps and games.",
+			"services": entryMap("service", "Restrict access to specific websites, apps and games.",
 				"tiktok", "https://api.nextdns.io/parentalcontrol/services"),
-			"categories": entryMap("category", "Categories: restrict access to specific categories of websites and apps.",
+			"categories": entryMap("category", "Restrict access to specific categories of websites and apps.",
 				"gambling", "https://api.nextdns.io/parentalcontrol/categories"),
 		},
 		Blocks: map[string]schema.Block{
 			"recreation": schema.SingleNestedBlock{
-				MarkdownDescription: "Recreation time: set a period for each day of the week during which the services " +
+				MarkdownDescription: "Set a period for each day of the week during which the services " +
 					"and categories with `recreation = true` will not be blocked — e.g., allow Facebook on Mondays and Tuesdays " +
-					"between 6pm and 8pm. Leave out a day to have no recreation time on that day.",
+					"between 6pm and 8pm.",
 				Attributes: map[string]schema.Attribute{
 					"timezone": schema.StringAttribute{
-						MarkdownDescription: "Timezone of the recreation times, for example `Europe/Lisbon`. Required when the block is set.",
-						Optional:            true,
+						MarkdownDescription: "Timezone of the recreation times, for example, `Europe/Lisbon`. Required when the block is set. " +
+							"Must be a name from the [Time Zone Database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), " +
+							"as required by the [NextDNS API](https://nextdns.github.io/api/#timezone-format).",
+						Optional: true,
 					},
 					"monday":    timeAttribute("Monday"),
 					"tuesday":   timeAttribute("Tuesday"),
@@ -210,7 +209,7 @@ func (r *ParentalControlResource) ValidateConfig(ctx context.Context, req resour
 
 	if data.Recreation.Timezone.IsNull() {
 		resp.Diagnostics.AddAttributeError(path.Root("recreation").AtName("timezone"),
-			"Missing recreation timezone", "The recreation block needs a timezone, for example \"Europe/Lisbon\".")
+			"Missing recreation timezone", "The recreation block needs a timezone, for example, \"Europe/Lisbon\".")
 	}
 
 	days := 0

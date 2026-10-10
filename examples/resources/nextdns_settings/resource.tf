@@ -1,10 +1,9 @@
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is set to its default.
-resource "nextdns_settings" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_settings" "office" {
+  profile_id = nextdns_profile.office.id
 
   logs_enabled    = true
   logs_client_ips = true
@@ -19,5 +18,6 @@ resource "nextdns_settings" "home" {
   cname_flattening = true
 
   bypass_age_verification = false
-  web3                    = false
+
+  web3 = false
 }

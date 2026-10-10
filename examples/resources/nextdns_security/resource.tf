@@ -1,12 +1,9 @@
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is turned off.
-# Some settings, such as data_drop_services, also block legitimate services:
-# read their descriptions before turning them on.
-resource "nextdns_security" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_security" "office" {
+  profile_id = nextdns_profile.office.id
 
   threat_intelligence_feeds  = true
   ai_threat_detection        = true

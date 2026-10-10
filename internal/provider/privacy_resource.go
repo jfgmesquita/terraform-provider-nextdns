@@ -46,11 +46,8 @@ func (r *PrivacyResource) Metadata(ctx context.Context, req resource.MetadataReq
 func (r *PrivacyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The privacy settings of a NextDNS profile.\n\n" +
-			"This resource manages all privacy settings: any setting left out of the configuration is turned off, " +
-			"and any list left out is emptied.\n\n" +
-			"Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: " +
-			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them, and apply.\n\n" +
-			profilePartNotes("nextdns_privacy"),
+			"~> Removing this resource from the configuration does not change the privacy settings in NextDNS: " +
+			"Terraform only stops managing them. To turn settings off, set them to `false` or remove them from the resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"profile_id": schema.StringAttribute{
@@ -62,7 +59,7 @@ func (r *PrivacyResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"blocklists": schema.SetAttribute{
 				MarkdownDescription: "Block ads & trackers using the most popular blocklists available — all updated in real time. " +
-					"Values are blocklist IDs, for example `[\"nextdns-recommended\", \"oisd\"]`. " +
+					"Values are blocklist IDs, for example, `[\"nextdns-recommended\", \"oisd\"]`. " +
 					"The available IDs are listed at https://api.nextdns.io/privacy/blocklists.",
 				ElementType: types.StringType,
 				Optional:    true,
@@ -70,10 +67,10 @@ func (r *PrivacyResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Default:     setdefault.StaticValue(emptyStringSet()),
 			},
 			"natives": schema.SetAttribute{
-				MarkdownDescription: "Native tracking protection: block trackers — often operating at the operating system level — " +
+				MarkdownDescription: "Block trackers — often operating at the operating system level — " +
 					"that monitor a broad range of your activity on a device. This could include all the websites you visit, " +
 					"everything you type or your location at all times. " +
-					"Values are vendor IDs, for example `[\"apple\", \"windows\"]`. " +
+					"Values are vendor IDs, for example, `[\"apple\", \"windows\"]`. " +
 					"The available IDs are listed at https://api.nextdns.io/privacy/natives.",
 				ElementType: types.StringType,
 				Optional:    true,

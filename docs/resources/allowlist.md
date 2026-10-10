@@ -9,52 +9,41 @@ description: |-
 
 The allowlist of a NextDNS profile. Allowing a domain will automatically allow all its subdomains. Allowing takes precedence over everything else, including security features.
 
-This resource manages the whole allowlist: domains added outside Terraform are removed on the next apply.
-
-Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: Terraform only stops managing it. To remove domains, delete their blocks and apply.
-
-~> Use only one `nextdns_allowlist` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
+~> Removing this resource from the configuration does not delete the allowlist in NextDNS: Terraform only stops managing it. To remove individual domains, delete their blocks from the resource.
 
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# This resource manages the whole allowlist: domains added outside
-# Terraform are removed on the next apply.
-resource "nextdns_allowlist" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_allowlist" "office" {
+  profile_id = nextdns_profile.office.id
 
   domain {
     id = "example.com"
   }
 
   domain {
-    id = "example.net"
-  }
-
-  domain {
     id = "example.org"
   }
 
-  # Inactive entries stay in the list but have no effect.
   domain {
-    id     = "example.dev"
+    id     = "example.net"
     active = false
   }
+}
+```
+
+```terraform
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
 # For long lists, a dynamic block creates one domain block per item.
 locals {
-  allowlist_domains = ["cdn.example.com", "login.example.com", "api.example.com"]
-}
-
-resource "nextdns_profile" "office" {
-  name = "Office"
+  allowlist_domains = ["example.com", "example.org", "example.net"]
 }
 
 resource "nextdns_allowlist" "office" {
@@ -85,29 +74,27 @@ resource "nextdns_allowlist" "office" {
 
 Required:
 
-- `id` (String) The domain, for example `example.com`.
+- `id` (String) The domain, for example, `example.com`.
 
 Optional:
 
-- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list but have no effect. Defaults to `true`.
+- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list, but have no effect. Defaults to `true`.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
-  to = nextdns_allowlist.home
-  id = "abc123"
+  to = nextdns_allowlist.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_allowlist.home "abc123"
+terraform import nextdns_allowlist.office "$NEXTDNS_PROFILE_ID"
 ```

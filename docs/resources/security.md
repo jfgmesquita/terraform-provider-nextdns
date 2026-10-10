@@ -9,26 +9,17 @@ description: |-
 
 The security settings of a NextDNS profile.
 
-This resource manages all security settings: any setting left out of the configuration is turned off.
-
-Removing this resource from the configuration, or destroying it, does not change any settings in NextDNS: Terraform only stops managing them. To turn protections off, set them to `false` and apply.
-
-~> Use only one `nextdns_security` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
+~> Removing this resource from the configuration does not change the security settings in NextDNS: Terraform only stops managing them. To turn settings off, set them to `false` or remove them from the resource.
 
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# Every setting is listed here. Any setting left out is turned off.
-# Some settings, such as data_drop_services, also block legitimate services:
-# read their descriptions before turning them on.
-resource "nextdns_security" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_security" "office" {
+  profile_id = nextdns_profile.office.id
 
   threat_intelligence_feeds  = true
   ai_threat_detection        = true
@@ -83,28 +74,26 @@ resource "nextdns_security" "home" {
 - `parking` (Boolean) Block parked domains: single-page websites often laden with ads and devoid of any value. Parked domain monetization can expose visitors to scams, phishing pages, and malicious downloads through advertising networks and redirects. Defaults to `false`.
 - `residential_hosting` (Boolean) Block domains that resolve to residential IP ranges (ISPs) rather than commercial data centers. Legitimate web services are rarely hosted on consumer connections, while botnet C2 servers and phishing proxies frequently run on compromised home routers. Defaults to `false`.
 - `threat_intelligence_feeds` (Boolean) Block domains known to distribute malware, launch phishing attacks and host command-and-control servers using a blend of the most reputable threat intelligence feeds — all updated in real time. Defaults to `false`.
-- `tlds` (Set of String) Block all domains and subdomains belonging to specific top-level domains (TLDs). Values are TLDs without the dot, for example `["zip", "mov"]`.
+- `tlds` (Set of String) Block all domains and subdomains belonging to specific top-level domains (TLDs). Values are TLDs without the dot, for example, `["zip", "mov"]`.
 - `tunneling_endpoints` (Boolean) Block services that tunnel local traffic to the public internet (e.g., ngrok, Cloudflare Tunnel). These tools are frequently used by attackers to bypass firewalls and host phishing pages on random subdomains while concealing their underlying infrastructure. Defaults to `false`.
 - `typosquatting` (Boolean) Block domains registered by malicious actors that target users who incorrectly type a website address into their browser — e.g., gooogle.com instead of google.com. Defaults to `false`.
 - `untrusted_certificates` (Boolean) Block domains that serve SSL/TLS certificates signed by untrusted or unknown Certificate Authorities (e.g., self-signed). While legitimate websites almost exclusively use trusted certificates, nearly 60% of commodity malware Command-and-Control (C2) servers rely on self-signed certificates or certificates issued by untrusted authorities to encrypt their traffic without leaving a paper trail. Defaults to `false`.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
-  to = nextdns_security.home
-  id = "abc123"
+  to = nextdns_security.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_security.home "abc123"
+terraform import nextdns_security.office "$NEXTDNS_PROFILE_ID"
 ```

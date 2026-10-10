@@ -9,52 +9,41 @@ description: |-
 
 The denylist of a NextDNS profile. Denying a domain will automatically deny all its subdomains.
 
-This resource manages the whole denylist: domains added outside Terraform are removed on the next apply.
-
-Removing this resource from the configuration, or destroying it, does not change anything in NextDNS: Terraform only stops managing it. To remove domains, delete their blocks and apply.
-
-~> Use only one `nextdns_denylist` resource per profile. Two resources for the same profile, in the same or in different Terraform configurations, would keep overwriting each other.
-
-~> To manage an existing profile, import this resource first and review `terraform plan` before applying, to see what will change.
+~> Removing this resource from the configuration does not delete the denylist in NextDNS: Terraform only stops managing it. To remove individual domains, delete their blocks from the resource.
 
 ## Example Usage
 
 ```terraform
-resource "nextdns_profile" "home" {
-  name = "Home"
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
-# This resource manages the whole denylist: domains added outside
-# Terraform are removed on the next apply.
-resource "nextdns_denylist" "home" {
-  profile_id = nextdns_profile.home.id
+resource "nextdns_denylist" "office" {
+  profile_id = nextdns_profile.office.id
 
   domain {
-    id = "ads.example.com"
+    id = "example.com"
   }
 
   domain {
-    id = "tracker.example.com"
+    id = "example.org"
   }
 
   domain {
-    id = "telemetry.example.com"
-  }
-
-  # Inactive entries stay in the list but have no effect.
-  domain {
-    id     = "analytics.example.com"
+    id     = "example.net"
     active = false
   }
+}
+```
+
+```terraform
+resource "nextdns_profile" "office" {
+  name = "Office"
 }
 
 # For long lists, a dynamic block creates one domain block per item.
 locals {
-  denylist_domains = ["ads.example.net", "ads.example.org", "tracking.example.net"]
-}
-
-resource "nextdns_profile" "office" {
-  name = "Office"
+  denylist_domains = ["example.com", "example.org", "example.net"]
 }
 
 resource "nextdns_denylist" "office" {
@@ -85,29 +74,27 @@ resource "nextdns_denylist" "office" {
 
 Required:
 
-- `id` (String) The domain, for example `example.com`.
+- `id` (String) The domain, for example, `example.com`.
 
 Optional:
 
-- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list but have no effect. Defaults to `true`.
+- `active` (Boolean) Whether this entry is active. Inactive entries stay in the list, but have no effect. Defaults to `true`.
 
 ## Import
 
-Import is supported using the following syntax:
-
-In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+In Terraform v1.6.0 and later, import is supported using the following syntax:
 
 ```terraform
 # The import ID is the profile ID.
 import {
-  to = nextdns_denylist.home
-  id = "abc123"
+  to = nextdns_denylist.office
+  id = var.nextdns_profile_id
 }
 ```
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Alternatively, use the [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) command:
 
 ```shell
 # The import ID is the profile ID.
-terraform import nextdns_denylist.home "abc123"
+terraform import nextdns_denylist.office "$NEXTDNS_PROFILE_ID"
 ```
