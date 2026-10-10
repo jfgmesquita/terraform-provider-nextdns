@@ -1,4 +1,4 @@
 import {
-  to = nextdns_profile.home
-  id = "abc123"
+  to = nextdns_profile.office
+  id = var.nextdns_profile_id
 }

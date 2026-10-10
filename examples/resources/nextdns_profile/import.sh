@@ -1,1 +1,1 @@
-terraform import nextdns_profile.home "abc123"
+terraform import nextdns_profile.office "$NEXTDNS_PROFILE_ID"
