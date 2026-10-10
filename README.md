@@ -16,16 +16,13 @@ terraform {
   required_providers {
     nextdns = {
       source  = "jfgmesquita/nextdns"
-      version = "~> 0.1.0"
+      version = "~> 0.1.1"
     }
   }
 }
 
-# Reads the API key from the NEXTDNS_API_KEY environment variable.
-provider "nextdns" {}
-
-resource "nextdns_profile" "office" {
-  name = "Office"
+provider "nextdns" {
+  api_key = var.nextdns_api_key
 }
 ```
 
@@ -42,7 +39,7 @@ make generate  # regenerate docs/ from the code and examples/
 make testacc   # run the acceptance tests
 ```
 
-The acceptance tests create and delete real profiles, so run them with the API key of a NextDNS account used only for testing, in `NEXTDNS_API_KEY`.
+The acceptance tests create and delete real profiles. Run them with the API key of a dedicated test NextDNS account, set in `NEXTDNS_API_KEY`.
 
 ## Credits
 
